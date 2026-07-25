@@ -14,8 +14,8 @@ Write interfaces in `.lmn` markup and real CSS, compile them with `lumenc`, and
 run them on a native, GPU-accelerated runtime. Familiar authoring, native
 performance.
 
-[Read the docs](lumen/){ .md-button .md-button--primary }
-[Explore Candela](candela/){ .md-button }
+[Read the docs](https://docs.lumenfx.dev/){ .md-button .md-button--primary }
+[Explore Candela](https://candela.lumenfx.dev/){ .md-button }
 
 </div>
 
@@ -43,7 +43,7 @@ A two-world ECS renderer runs your compiled UI on the desktop, not in a browser.
 ### Scripted with Candela
 
 Lumen's interactivity is driven by Candela, a fast, statically-typed scripting
-language. [See the language](candela/).
+language. [See the language](https://candela.lumenfx.dev/).
 </div>
 
 </div>

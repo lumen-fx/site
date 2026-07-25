@@ -1,19 +1,27 @@
 #!/usr/bin/env python3
-"""Assemble the Zensical docs_dir for the unified lumenfx.dev site.
+"""Assemble the docs_dir and generate the Zensical config for each build target.
 
-Product docs are fetched fresh from each product repo at build time and are
-never committed to this repo. Run this before `zensical build`.
+The site is three independent static builds -- apex, candela, docs -- that share
+one theme. Each target has its own docs_dir (site source) and its own generated
+config. Product docs are fetched fresh from each product repo at build time and
+are never committed to this repo. Run this before `zensical build`.
 
-The assembled tree lives in `build/docs` (the Zensical `docs_dir`) and is
-composed of:
+For each target this script:
 
-  * `content/`            site-owned pages: landings, the Lumen docs
-                          placeholder, theme assets. Copied verbatim.
-  * candela docs          cloned fresh from lumen-fx/candela and copied to
-                          `build/docs/candela/docs`.
+  1. Assembles build/<target>/docs (the Zensical docs_dir) from:
+       * content/shared/    theme assets (stylesheets, favicon), copied to
+                            every target.
+       * content/<target>/  the target's own pages (landing or docs home,
+                            stubs), copied verbatim.
+       * cloned product docs (docs target only) copied to a subpath.
+  2. Writes zensical.<target>.toml at the repo root by concatenating the
+     target's [project] block (config/<target>.toml) in front of the shared
+     theme (config/theme.toml). The config is written at the repo root so
+     Zensical resolves docs_dir and site_dir relative to the repo root.
 
-Adding Lumen docs later is a one-line addition: register another SOURCES
-entry once the Lumen docs are Zensical markdown (they are an mdbook today).
+Adding Lumen docs later is a one-line change: add a clone entry to the docs
+target's "clones" list once the Lumen docs are Zensical markdown (they are an
+mdbook today).
 
 Environment overrides:
   CANDELA_REPO   git URL for candela        (default: the public GitHub repo)
@@ -30,40 +38,63 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CONTENT = ROOT / "content"
+SHARED = CONTENT / "shared"
+CONFIG = ROOT / "config"
+THEME_FRAGMENT = CONFIG / "theme.toml"
 BUILD = ROOT / "build"
-DOCS_OUT = BUILD / "docs"
 REPOS = BUILD / "repos"
 
 
-# Each source clones a product repo at a rev and copies a subdirectory of
-# markdown into the assembled docs_dir. To add Lumen once its docs are
-# Zensical, append an entry here and add the nav in zensical.toml.
-SOURCES = [
-    {
+# A clone entry pulls a product repo at a rev and copies a subdirectory of
+# markdown into the target's docs_dir. This is how the docs target picks up the
+# Candela docs. To add Lumen once its docs are Zensical markdown, append an
+# entry to the docs target's "clones" and add the nav in config/docs.toml.
+def _candela_clone() -> dict:
+    return {
         "name": "candela",
-        "repo": os.environ.get(
-            "CANDELA_REPO", "https://github.com/lumen-fx/candela"
-        ),
+        "repo": os.environ.get("CANDELA_REPO", "https://github.com/lumen-fx/candela"),
         "rev": os.environ.get("CANDELA_REV", "main"),
         # Subpath of the cloned repo that holds the markdown docs.
         "src_subdir": Path("docs") / "docs",
-        # Destination under the assembled docs_dir.
-        "dest_subdir": Path("candela") / "docs",
+        # Destination under the target's docs_dir (served at /candela/).
+        "dest_subdir": Path("candela"),
+    }
+
+
+# The three build targets. Each becomes its own static site rooted at "/".
+TARGETS = [
+    {
+        # Lumen landing at the root of lumenfx.dev.
+        "name": "apex",
+        "content_dir": CONTENT / "apex",
+        "clones": [],
     },
-    # Lumen docs are an mdbook today, not Zensical, so they are not pulled
-    # yet. The placeholder at content/lumen/index.md holds the slot. When
-    # the docs move to Zensical, add an entry like:
-    # {
-    #     "name": "lumen",
-    #     "repo": os.environ.get("LUMEN_REPO", "https://github.com/lumen-fx/lumen"),
-    #     "rev": os.environ.get("LUMEN_REV", "main"),
-    #     "src_subdir": Path("docs"),
-    #     "dest_subdir": Path("lumen"),
-    # },
+    {
+        # Candela landing at the root of candela.lumenfx.dev.
+        "name": "candela",
+        "content_dir": CONTENT / "candela",
+        "clones": [],
+    },
+    {
+        # Unified docs at the root of docs.lumenfx.dev.
+        "name": "docs",
+        "content_dir": CONTENT / "docs",
+        "clones": [
+            _candela_clone(),
+            # When the Lumen docs move to Zensical, add:
+            # {
+            #     "name": "lumen",
+            #     "repo": os.environ.get("LUMEN_REPO", "https://github.com/lumen-fx/lumen"),
+            #     "rev": os.environ.get("LUMEN_REV", "main"),
+            #     "src_subdir": Path("docs"),
+            #     "dest_subdir": Path("lumen"),
+            # },
+        ],
+    },
 ]
 
 
-def run(cmd: list[str], **kw) -> None:
+def run(cmd: list, **kw) -> None:
     print("+", " ".join(str(c) for c in cmd), flush=True)
     subprocess.run([str(c) for c in cmd], check=True, **kw)
 
@@ -79,31 +110,75 @@ def clone(repo: str, rev: str, dest: Path) -> None:
     run(["git", "-C", dest, "checkout", "-q", "FETCH_HEAD"])
 
 
-def assemble() -> None:
-    # Start from a clean docs_dir seeded with the site-owned content.
-    if DOCS_OUT.exists():
-        shutil.rmtree(DOCS_OUT)
-    if not CONTENT.is_dir():
-        sys.exit(f"error: missing content directory: {CONTENT}")
-    shutil.copytree(CONTENT, DOCS_OUT)
-    print(f"seeded docs_dir from {CONTENT.relative_to(ROOT)}", flush=True)
+def generate_config(target: str) -> Path:
+    """Write zensical.<target>.toml at the repo root: per-target block + theme."""
+    part = CONFIG / f"{target}.toml"
+    if not part.is_file():
+        sys.exit(f"error: missing target config: {part}")
+    if not THEME_FRAGMENT.is_file():
+        sys.exit(f"error: missing theme fragment: {THEME_FRAGMENT}")
+    out = ROOT / f"zensical.{target}.toml"
+    header = (
+        f"# GENERATED by scripts/prebuild.py from config/{target}.toml and\n"
+        f"# config/theme.toml. Do not edit; edit those sources instead.\n\n"
+    )
+    body = (
+        part.read_text(encoding="utf-8").rstrip()
+        + "\n\n"
+        + THEME_FRAGMENT.read_text(encoding="utf-8")
+    )
+    out.write_text(header + body, encoding="utf-8")
+    print(f"generated config -> {out.relative_to(ROOT)}", flush=True)
+    return out
 
-    for src in SOURCES:
-        clone_dest = REPOS / src["name"]
+
+def assemble_target(target: dict) -> None:
+    name = target["name"]
+    docs_out = BUILD / name / "docs"
+    if docs_out.exists():
+        shutil.rmtree(docs_out)
+    docs_out.mkdir(parents=True)
+
+    # Shared theme assets first (stylesheets, favicon), then the target's own
+    # pages on top.
+    if not SHARED.is_dir():
+        sys.exit(f"error: missing shared assets directory: {SHARED}")
+    shutil.copytree(SHARED, docs_out, dirs_exist_ok=True)
+
+    content_dir = target["content_dir"]
+    if not content_dir.is_dir():
+        sys.exit(f"error: missing content directory: {content_dir}")
+    shutil.copytree(content_dir, docs_out, dirs_exist_ok=True)
+    print(
+        f"[{name}] seeded docs_dir from "
+        f"{SHARED.relative_to(ROOT)} + {content_dir.relative_to(ROOT)}",
+        flush=True,
+    )
+
+    for src in target["clones"]:
+        clone_dest = REPOS / f"{name}-{src['name']}"
         clone(src["repo"], src["rev"], clone_dest)
         md_src = clone_dest / src["src_subdir"]
         if not md_src.is_dir():
             sys.exit(f"error: {src['name']} docs not found at {md_src}")
-        md_dest = DOCS_OUT / src["dest_subdir"]
+        md_dest = docs_out / src["dest_subdir"]
         shutil.copytree(md_src, md_dest, dirs_exist_ok=True)
         print(
-            f"copied {src['name']} docs @ {src['rev']} "
+            f"[{name}] copied {src['name']} docs @ {src['rev']} "
             f"-> {md_dest.relative_to(ROOT)}",
             flush=True,
         )
 
-    print(f"docs_dir assembled at {DOCS_OUT.relative_to(ROOT)}", flush=True)
+    generate_config(name)
+    print(f"[{name}] docs_dir assembled at {docs_out.relative_to(ROOT)}", flush=True)
+
+
+def main() -> None:
+    if not CONTENT.is_dir():
+        sys.exit(f"error: missing content directory: {CONTENT}")
+    for target in TARGETS:
+        assemble_target(target)
 
 
 if __name__ == "__main__":
-    assemble()
+    main()

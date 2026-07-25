@@ -1,0 +1,65 @@
+# Docs target: the unified documentation at the root of docs.lumenfx.dev.
+# Deployed to the Cloudflare Pages project `lumenfx-docs`.
+#
+# This is the single Zensical build that carries both products' docs so search
+# is unified. The Candela docs are cloned fresh by the prebuild into
+# build/docs/docs/candela (served at /candela/). The Lumen docs are a stub at
+# /lumen/ until they migrate off mdbook.
+#
+# This file owns the per-target [project] block; config/theme.toml is
+# concatenated after it by the prebuild.
+
+[project]
+
+site_name = "Lumen FX Docs"
+site_description = "Unified documentation for Lumen and its scripting language Candela. One search across both products."
+site_author = "Lumen FX"
+site_url = "https://docs.lumenfx.dev"
+
+repo_url = "https://github.com/lumen-fx"
+repo_name = "lumen-fx"
+
+copyright = """
+Copyright &copy; 2026 Lumen FX &middot; Candela is a fork of keel by Horace Hoff
+"""
+
+docs_dir = "build/docs/docs"
+site_dir = "dist/docs"
+
+extra_css = ["stylesheets/extra.css"]
+
+nav = [
+  {"Home" = "index.md"},
+  {"Candela" = [
+     "candela/index.md",
+     {"Language tour" = [
+        "candela/language-tour/hello-world.md",
+        "candela/language-tour/variables.md",
+        "candela/language-tour/data-types.md",
+        "candela/language-tour/functions.md",
+        "candela/language-tour/control-flow.md",
+        "candela/language-tour/error-handling.md",
+        "candela/language-tour/modules.md",
+        "candela/language-tour/dynamic-libraries.md",
+        "candela/language-tour/embedding.md",
+     ]},
+     {"Reference" = [
+        "candela/reference/operators.md",
+        "candela/reference/errors.md",
+     ]},
+     {"Standard library" = [
+        "candela/standard-library/built-in-functions.md",
+        "candela/standard-library/assert.md",
+        "candela/standard-library/convert.md",
+        "candela/standard-library/fs.md",
+        "candela/standard-library/list.md",
+        "candela/standard-library/math.md",
+        "candela/standard-library/random.md",
+        "candela/standard-library/string.md",
+        "candela/standard-library/time.md",
+     ]},
+  ]},
+  {"Lumen" = [
+     "lumen/index.md",
+  ]},
+]

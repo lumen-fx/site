@@ -1,7 +1,17 @@
 name: build-site
 
-# Builds the unified lumenfx.dev site. Product docs are cloned fresh at build
-# time (see scripts/prebuild.py); nothing docs-related is committed here.
+# Builds the three static targets (apex, candela, docs) and deploys each to its
+# own Cloudflare Pages project. Product docs are cloned fresh at build time (see
+# scripts/prebuild.py); nothing docs-related is committed here.
+#
+# Each target is a self-contained static build served at a domain root:
+#   apex    -> lumenfx.dev          Pages project: lumenfx
+#   candela -> candela.lumenfx.dev  Pages project: lumenfx-candela
+#   docs    -> docs.lumenfx.dev     Pages project: lumenfx-docs
+#
+# Pages projects are pure static (no Functions, no _middleware, no Workers).
+# Custom domains are attached per project in the Cloudflare dashboard by the
+# owner.
 
 on:
   push:
@@ -34,29 +44,53 @@ jobs:
       - name: Sync dependencies
         run: uv sync
 
-      - name: Assemble docs (clone product docs fresh)
+      - name: Assemble docs and configs (clone product docs fresh)
         run: uv run python scripts/prebuild.py
 
-      - name: Build static site
-        run: uv run zensical build --strict
+      - name: Build apex
+        run: uv run zensical build --strict -f zensical.apex.toml
 
-      - name: Upload static site artifact
+      - name: Build candela
+        run: uv run zensical build --strict -f zensical.candela.toml
+
+      - name: Build docs
+        run: uv run zensical build --strict -f zensical.docs.toml
+
+      - name: Upload static site artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: site
+          name: sites
           path: dist
 
-      # Deploy to Cloudflare Pages. Runs on push to main and manual dispatch,
-      # not on pull requests (those only validate the build above). Creates the
-      # Pages project on first run, then uploads dist/. Secrets are org-level:
-      # CLOUDFLARE_ACCOUNT = account id, CLOUDFLARE_API_KEY = an API token with
-      # Account > Cloudflare Pages > Edit (wrangler reads it as CLOUDFLARE_API_TOKEN).
-      - name: Deploy to Cloudflare Pages
+      # Deploy each target to its own Cloudflare Pages project. Runs on push to
+      # main and manual dispatch, not on pull requests (those only validate the
+      # build above). Creates each project on first run; an already-exists error
+      # is fine. Secrets are org-level: CLOUDFLARE_ACCOUNT = account id,
+      # CLOUDFLARE_API_KEY = an API token with Account > Cloudflare Pages > Edit
+      # (wrangler reads it as CLOUDFLARE_API_TOKEN).
+      - name: Deploy apex to Cloudflare Pages (lumenfx)
         if: github.event_name != 'pull_request'
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_KEY }}
         run: |
-          # Create the project on first deploy; a already-exists error is fine.
           npx --yes wrangler@4 pages project create lumenfx --production-branch=main || true
-          npx --yes wrangler@4 pages deploy dist --project-name=lumenfx --branch=main
+          npx --yes wrangler@4 pages deploy dist/apex --project-name=lumenfx --branch=main
+
+      - name: Deploy candela to Cloudflare Pages (lumenfx-candela)
+        if: github.event_name != 'pull_request'
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_KEY }}
+        run: |
+          npx --yes wrangler@4 pages project create lumenfx-candela --production-branch=main || true
+          npx --yes wrangler@4 pages deploy dist/candela --project-name=lumenfx-candela --branch=main
+
+      - name: Deploy docs to Cloudflare Pages (lumenfx-docs)
+        if: github.event_name != 'pull_request'
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_KEY }}
+        run: |
+          npx --yes wrangler@4 pages project create lumenfx-docs --production-branch=main || true
+          npx --yes wrangler@4 pages deploy dist/docs --project-name=lumenfx-docs --branch=main

@@ -1,0 +1,33 @@
+# Candela target: the Candela landing at the root of candela.lumenfx.dev.
+# Deployed to the Cloudflare Pages project `lumenfx-candela`.
+#
+# The Candela docs do not live here -- the landing's "read the docs" links point
+# at https://docs.lumenfx.dev/candela/ (the docs target carries the docs).
+#
+# This file owns the per-target [project] block; config/theme.toml is
+# concatenated after it by the prebuild.
+
+[project]
+
+site_name = "Candela"
+site_description = "Candela is a fast, statically-typed interpreted scripting language with Rust-like syntax and Python's ease of use. It is the scripting language for the Lumen UI framework."
+site_author = "Lumen FX"
+site_url = "https://candela.lumenfx.dev"
+
+repo_url = "https://github.com/lumen-fx/candela"
+repo_name = "lumen-fx/candela"
+
+copyright = """
+Copyright &copy; 2026 Lumen FX &middot; Candela is a fork of keel by Horace Hoff
+"""
+
+docs_dir = "build/candela/docs"
+site_dir = "dist/candela"
+
+extra_css = ["stylesheets/extra.css"]
+
+nav = [
+  {"Candela" = "index.md"},
+  {"Docs" = "https://docs.lumenfx.dev/candela/"},
+  {"Lumen" = "https://lumenfx.dev/"},
+]

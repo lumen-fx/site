@@ -14,8 +14,8 @@ Candela combines Rust-like syntax with Python's ease of use. It aims to be a
 faster alternative to Python that sits closer to low-level languages while
 staying approachable.
 
-[Get started](docs/){ .md-button .md-button--primary }
-[Browse the docs](docs/){ .md-button }
+[Get started](https://docs.lumenfx.dev/candela/){ .md-button .md-button--primary }
+[Browse the docs](https://docs.lumenfx.dev/candela/){ .md-button }
 
 </div>
 
@@ -73,7 +73,7 @@ candela build program.cdl     # compile to program.cdlb bytecode
 candela                       # start the REPL
 ```
 
-[Read the documentation](docs/){ .md-button .md-button--primary }
+[Read the documentation](https://docs.lumenfx.dev/candela/){ .md-button .md-button--primary }
 [Source on GitHub](https://github.com/lumen-fx/candela){ .md-button }
 
 !!! info "Attribution"

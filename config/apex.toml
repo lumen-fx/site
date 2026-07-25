@@ -1,0 +1,32 @@
+# Apex target: the Lumen landing at the root of lumenfx.dev.
+# Deployed to the Cloudflare Pages project `lumenfx`.
+#
+# This file owns the per-target [project] block. The prebuild concatenates
+# config/theme.toml (the shared theme) after it. Paths are resolved by Zensical
+# relative to the generated config file, which the prebuild writes at the repo
+# root, so docs_dir and site_dir are repo-root-relative.
+
+[project]
+
+site_name = "Lumen"
+site_description = "Lumen is a Rust desktop UI framework with web-like authoring: .lmn markup and real CSS, compiled by lumenc and run on a native runtime."
+site_author = "Lumen FX"
+site_url = "https://lumenfx.dev"
+
+repo_url = "https://github.com/lumen-fx"
+repo_name = "lumen-fx"
+
+copyright = """
+Copyright &copy; 2026 Lumen FX
+"""
+
+docs_dir = "build/apex/docs"
+site_dir = "dist/apex"
+
+extra_css = ["stylesheets/extra.css"]
+
+nav = [
+  {"Home" = "index.md"},
+  {"Candela" = "https://candela.lumenfx.dev/"},
+  {"Docs" = "https://docs.lumenfx.dev/"},
+]
