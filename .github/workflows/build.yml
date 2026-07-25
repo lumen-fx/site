@@ -46,7 +46,17 @@ jobs:
           name: site
           path: dist
 
-  # TODO: deploy `dist/` to the hosting target once chosen (Cloudflare Pages or
-  # GitHub Pages). The build above produces the artifact; wiring the deploy is a
-  # matter of adding a deploy job that consumes the `site` artifact and the
-  # subdomain routing described in the README.
+      # Deploy to Cloudflare Pages. Runs on push to main and manual dispatch,
+      # not on pull requests (those only validate the build above). Creates the
+      # Pages project on first run, then uploads dist/. Secrets are org-level:
+      # CLOUDFLARE_ACCOUNT = account id, CLOUDFLARE_API_KEY = an API token with
+      # Account > Cloudflare Pages > Edit (wrangler reads it as CLOUDFLARE_API_TOKEN).
+      - name: Deploy to Cloudflare Pages
+        if: github.event_name != 'pull_request'
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_KEY }}
+        run: |
+          # Create the project on first deploy; a already-exists error is fine.
+          npx --yes wrangler@4 pages project create lumenfx --production-branch=main || true
+          npx --yes wrangler@4 pages deploy dist --project-name=lumenfx --branch=main
