@@ -1,0 +1,55 @@
+/* Landing-page styling for the unified lumenfx.dev site.
+   Hero and feature-grid helpers used by the apex and Candela landings. */
+
+.lx-hero {
+  text-align: center;
+  padding: 4rem 1rem 3rem;
+  max-width: 46rem;
+  margin: 0 auto;
+}
+
+.lx-hero h1 {
+  font-size: 3.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.4rem;
+}
+
+.lx-hero h2 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--md-default-fg-color--light);
+  margin: 0 auto 1.2rem;
+  max-width: 34rem;
+}
+
+.lx-hero p {
+  font-size: 1.05rem;
+  color: var(--md-default-fg-color--light);
+  max-width: 34rem;
+  margin: 0 auto 1.6rem;
+}
+
+.lx-hero .md-button {
+  margin: 0.3rem 0.4rem;
+}
+
+/* Feature grid on the apex landing. */
+.lx-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1.5rem;
+  max-width: 60rem;
+  margin: 2.5rem auto;
+}
+
+.lx-card {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.4rem;
+  padding: 1.2rem 1.4rem;
+}
+
+.lx-features h3 {
+  margin-top: 0;
+}

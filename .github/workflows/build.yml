@@ -1,0 +1,52 @@
+name: build-site
+
+# Builds the unified lumenfx.dev site. Product docs are cloned fresh at build
+# time (see scripts/prebuild.py); nothing docs-related is committed here.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      candela_rev:
+        description: "candela rev to build (branch, tag, or SHA)"
+        required: false
+        default: "main"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # Default to main. A release bumps this to a pinned tag or SHA, either by
+      # editing this default or via the workflow_dispatch input above.
+      CANDELA_REV: ${{ github.event.inputs.candela_rev || 'main' }}
+    steps:
+      - name: Checkout site
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Assemble docs (clone product docs fresh)
+        run: uv run python scripts/prebuild.py
+
+      - name: Build static site
+        run: uv run zensical build --strict
+
+      - name: Upload static site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: dist
+
+  # TODO: deploy `dist/` to the hosting target once chosen (Cloudflare Pages or
+  # GitHub Pages). The build above produces the artifact; wiring the deploy is a
+  # matter of adding a deploy job that consumes the `site` artifact and the
+  # subdomain routing described in the README.

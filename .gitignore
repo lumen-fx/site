@@ -1,0 +1,15 @@
+# Generated build tree (assembled docs_dir + cloned product repos)
+/build/
+
+# Zensical static output
+/dist/
+/site/
+
+# Python
+__pycache__/
+*.py[oc]
+.venv/
+*.egg-info/
+
+# Zensical cache
+.cache/
