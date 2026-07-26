@@ -17,7 +17,7 @@
 
 # Logos are not finalized. The header falls back to the site_name text
 # wordmark. TODO: set `logo` to a real asset once branding lands.
-favicon = "images/favicon.png"
+favicon = "images/favicon.svg"
 language = "en"
 
 features = [
