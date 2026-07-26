@@ -1,29 +1,35 @@
 # lumenfx.dev site
 
 The marketing landings and documentation for Lumen and Candela. Three
-independent [Zensical](https://zensical.org) static builds, each served at a
-domain root, sharing one theme.
+independent static builds, each served at a domain root and deployed to its own
+Cloudflare Pages project.
 
-This is an early scaffold. The apex landing copy, the Lumen docs slot, and all
-logo art are placeholders (see [Placeholders](#placeholders)).
+Two build styles live here:
+
+- The **landings** are bespoke custom static sites, free to look however they
+  should. The Candela landing is a Vite + React + TypeScript app styled with
+  Bootstrap (`apps/candela/`). The apex (Lumen) landing is still Zensical for
+  now and is slated to become custom later.
+- The **docs** are [Zensical](https://zensical.org): one unified build carrying
+  both products' docs so search spans them.
+
+This is an early scaffold. The apex landing copy and the Lumen docs slot are
+placeholders, and the logo art is a placeholder (see [Placeholders](#placeholders)).
 
 ## The three targets
 
-Each target is a self-contained static site rooted at `/`, with its own
-`site_url`, built independently and deployed to its own Cloudflare Pages project.
+| Target    | Domain                | Pages project     | Build          | Serves                     |
+| --------- | --------------------- | ----------------- | -------------- | -------------------------- |
+| `apex`    | `lumenfx.dev`         | `lumenfx`         | Zensical       | The Lumen landing          |
+| `candela` | `candela.lumenfx.dev` | `lumenfx-candela` | Vite + React   | The Candela landing        |
+| `docs`    | `docs.lumenfx.dev`    | `lumenfx-docs`    | Zensical       | Unified docs, one search   |
 
-| Target    | Domain                | Pages project     | Serves                                     |
-| --------- | --------------------- | ----------------- | ------------------------------------------ |
-| `apex`    | `lumenfx.dev`         | `lumenfx`         | The Lumen landing                          |
-| `candela` | `candela.lumenfx.dev` | `lumenfx-candela` | The Candela landing                        |
-| `docs`    | `docs.lumenfx.dev`    | `lumenfx-docs`    | Unified docs (Candela + Lumen), one search |
+Each target is a self-contained static site rooted at `/`, built independently
+into `dist/<target>/`. Cross-links between targets are absolute URLs (for
+example the Candela landing's "Get started" button points at
+`https://docs.lumenfx.dev/candela/`), because each target is a separate site.
 
-Cross-links between targets are absolute URLs (for example the apex "Explore
-Candela" button points at `https://candela.lumenfx.dev/`), because each target
-is a separate site.
-
-The `docs` target is the single build that carries both products' docs so search
-is unified across them:
+The `docs` target carries both products' docs so search is unified:
 
 - `/candela/...` -- the Candela docs, cloned fresh from `lumen-fx/candela` at
   build time.
@@ -32,68 +38,65 @@ is unified across them:
 
 ## What is here
 
-- `content/shared/` -- theme assets (stylesheets, favicon) copied into every
-  target.
-- `content/apex/index.md` -- the Lumen landing.
-- `content/candela/index.md` -- the Candela landing.
+- `apps/candela/` -- the Candela landing: a Vite + React + TypeScript app styled
+  with Bootstrap. Component-structured under `src/components/` so the apex
+  landing can reuse the same setup later. `public/favicon.svg` is the Candela
+  placeholder mark; `public/install.sh` is fetched fresh, not committed.
+- `content/shared/` -- Zensical theme assets (stylesheets, favicon) copied into
+  the apex and docs targets.
+- `content/apex/index.md` -- the Lumen landing (Zensical).
 - `content/docs/` -- the docs home (`index.md`) and the Lumen docs stub
   (`lumen/index.md`).
-- `config/theme.toml` -- the shared theme (palette, features, Markdown
-  extensions), defined once.
-- `config/{apex,candela,docs}.toml` -- each target's `[project]` block
-  (`site_url`, `docs_dir`, `site_dir`, nav).
-- `scripts/prebuild.py` -- assembles each target's docs_dir and generates its
-  config.
+- `config/theme.toml` -- the shared Zensical theme, defined once.
+- `config/{apex,docs}.toml` -- each Zensical target's `[project]` block.
+- `scripts/prebuild.py` -- assembles the apex and docs docs_dir and generates
+  their configs (clones the Candela docs for the docs target).
+- `scripts/fetch_candela_install.py` -- clones the candela repo and copies its
+  `install.sh` into the Candela landing so it is served at
+  `candela.lumenfx.dev/install.sh`.
+- `scripts/build.sh` -- builds all three targets locally.
 - `.github/workflows/build.yml` -- CI build and deploy.
 
-Product docs are **not** committed here. They are fetched fresh from each
-product repo at build time.
+Product docs and the installer are **not** committed here. They are fetched
+fresh from the candela repo at build time.
 
 ## Build model
 
-Zensical builds one site per config file. This repo keeps the theme in one
-place and generates a full config per target:
+Each target builds into `dist/<target>/`, ready for `wrangler pages deploy`.
 
-1. `scripts/prebuild.py` assembles each target's docs_dir under
-   `build/<target>/docs` from `content/shared/` plus the target's own
-   `content/<target>/`, and for the `docs` target it clones the Candela docs
-   into `build/docs/docs/candela`.
-2. For each target it writes `zensical.<target>.toml` at the repo root by
-   concatenating `config/<target>.toml` in front of `config/theme.toml`. These
-   generated files are gitignored.
-3. `zensical build -f zensical.<target>.toml` builds each target into
-   `dist/<target>/`.
+**apex and docs (Zensical).** `scripts/prebuild.py` assembles each target's
+docs_dir under `build/<target>/docs` from `content/shared/` plus the target's
+own `content/<target>/`, cloning the Candela docs into `build/docs/docs/candela`
+for the docs target. It then writes `zensical.<target>.toml` at the repo root
+(the per-target `config/<target>.toml` block in front of `config/theme.toml`).
+`zensical build -f zensical.<target>.toml` builds each into `dist/<target>/`.
 
-```
-content/
-  shared/           theme assets, copied into every target
-  apex/index.md     -> apex   /            Lumen landing
-  candela/index.md  -> candela/            Candela landing
-  docs/index.md     -> docs   /            docs home
-  docs/lumen/       -> docs   /lumen/      Lumen docs stub
-config/
-  theme.toml        shared theme (defined once)
-  apex.toml         apex [project] block + nav
-  candela.toml      candela [project] block + nav
-  docs.toml         docs [project] block + nav
-build/<target>/docs assembled docs_dir (generated)
-  docs/candela/     -> docs /candela/      Candela docs, cloned fresh
-dist/<target>/      static output (generated)
-```
+**candela (Vite + React).** `scripts/fetch_candela_install.py` clones the
+candela repo and drops its `install.sh` into `apps/candela/public/`. `vite build`
+then produces a fully static, client-rendered SPA into `dist/candela/`, copying
+everything in `public/` (the installer and the favicon) to the output root. No
+server, no Cloudflare Workers, no Pages Functions.
 
 ## Build locally
 
-Requires [uv](https://docs.astral.sh/uv/) and `git`.
+Requires [uv](https://docs.astral.sh/uv/), Node.js (with npm), and `git`.
 
 ```sh
 scripts/build.sh
 ```
 
-That syncs dependencies, runs the prebuild (which clones the Candela docs and
-generates the three configs), and builds all three targets. The results are in
-`dist/apex/`, `dist/candela/`, and `dist/docs/`.
+That builds all three targets into `dist/apex/`, `dist/candela/`, and
+`dist/docs/`.
 
-To build or serve a single target after an initial prebuild:
+To work on just the Candela landing with hot reload:
+
+```sh
+uv run python scripts/fetch_candela_install.py   # once, to get install.sh
+npm --prefix apps/candela install
+npm --prefix apps/candela run dev
+```
+
+To build or serve a single Zensical target after a prebuild:
 
 ```sh
 uv run python scripts/prebuild.py
@@ -101,13 +104,10 @@ uv run zensical build --strict -f zensical.docs.toml   # build just docs
 uv run zensical serve -f zensical.apex.toml            # serve just apex
 ```
 
-Editing files under `content/` or `config/` is picked up by re-running the
-prebuild. Product docs come from the clone, so re-run `prebuild.py` to refresh
-them.
+## Pinning the Candela revision
 
-## Pinning the Candela docs revision
-
-The `docs` build clones the Candela docs at a rev, defaulting to `main`.
+Both the Candela docs (docs target) and the packaged `install.sh` (candela
+target) are fetched from the candela repo at a rev, defaulting to `main`.
 Override it with an environment variable:
 
 ```sh
@@ -116,19 +116,15 @@ CANDELA_REV=<sha>   scripts/build.sh     # a commit
 CANDELA_REPO=https://github.com/you/candela-fork scripts/build.sh
 ```
 
-A docs release is a two-step flow: cut the docs in `lumen-fx/candela`, then bump
-`CANDELA_REV` -- in CI via the `candela_rev` workflow_dispatch input, or by
-changing the default in `.github/workflows/build.yml` so every push pins that
-rev.
+In CI the same rev flows through the `candela_rev` workflow_dispatch input, or by
+changing the default in `.github/workflows/build.yml`.
 
 ## Adding Lumen docs later
 
 The Lumen docs are an mdbook today and are not migrated to Zensical, so the
 `/lumen/` slot on the `docs` target is a placeholder. When they become Zensical
-markdown, add one clone entry to the `docs` target's `clones` list in
-`scripts/prebuild.py` (a `git clone lumen-fx/lumen` plus a copy, templated next
-to the Candela entry) and add the nav in `config/docs.toml`. No other structural
-change is needed.
+markdown, add one clone entry to the docs target's `clones` list in
+`scripts/prebuild.py` and add the nav in `config/docs.toml`.
 
 ## Deploy
 
@@ -138,17 +134,19 @@ they do not deploy. The projects are pure static -- no Pages Functions, no
 `_middleware`, no Workers.
 
 The deploy uses org-level secrets: `CLOUDFLARE_ACCOUNT` (account id) and
-`CLOUDFLARE_API_KEY` (an API token with Account > Cloudflare Pages > Edit).
-Each project is created on first deploy if it does not exist.
-
-The custom domains (`lumenfx.dev`, `candela.lumenfx.dev`, `docs.lumenfx.dev`)
-are attached to their Pages projects in the Cloudflare dashboard by the owner;
-CI does not manage domains.
+`CLOUDFLARE_API_KEY` (an API token with Account > Cloudflare Pages > Edit). Each
+project is created on first deploy if it does not exist. Custom domains are
+attached per project in the Cloudflare dashboard by the owner; CI does not manage
+domains.
 
 ## Placeholders
 
-- The apex landing copy, layout, and structure are a first pass.
+- The Candela landing favicon (`apps/candela/public/favicon.svg`) is a placeholder
+  flame mark, not the final logo. The candela repo already ships a finished flame
+  logo (`assets/colored-logo.svg`) that can replace it once branding is settled.
+- The apex and docs targets still use the old shared favicon
+  (`content/shared/images/favicon.png`), which is keel branding. Replace it when
+  Lumen and the docs get their own marks.
+- The apex landing copy and layout are a first pass, and apex is slated to move
+  from Zensical to a custom build like the Candela landing.
 - The `/lumen/` docs section is a stub until the Lumen docs move to Zensical.
-- Logos are not finalized. The header uses the site_name text wordmark and the
-  favicon is a placeholder image. Set a real `logo` and `favicon` in
-  `config/theme.toml` once branding lands.

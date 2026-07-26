@@ -41,20 +41,38 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
+      - name: Set up Node (for the Candela landing)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/candela/package-lock.json
+
       - name: Sync dependencies
         run: uv sync
 
-      - name: Assemble docs and configs (clone product docs fresh)
+      # apex and docs are Zensical. prebuild assembles their docs_dir (cloning
+      # the candela docs fresh for docs) and generates their configs.
+      - name: Assemble apex + docs (clone product docs fresh)
         run: uv run python scripts/prebuild.py
 
-      - name: Build apex
+      - name: Build apex (zensical)
         run: uv run zensical build --strict -f zensical.apex.toml
 
-      - name: Build candela
-        run: uv run zensical build --strict -f zensical.candela.toml
-
-      - name: Build docs
+      - name: Build docs (zensical)
         run: uv run zensical build --strict -f zensical.docs.toml
+
+      # The Candela landing is a static Vite + React app. Fetch install.sh fresh
+      # from the candela repo so it ships at candela.lumenfx.dev/install.sh, then
+      # build to dist/candela.
+      - name: Package candela install.sh
+        run: uv run python scripts/fetch_candela_install.py
+
+      - name: Install candela landing deps
+        run: npm --prefix apps/candela ci
+
+      - name: Build candela landing (vite)
+        run: npm --prefix apps/candela run build
 
       - name: Upload static site artifacts
         uses: actions/upload-artifact@v4

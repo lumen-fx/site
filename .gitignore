@@ -3,8 +3,14 @@
 
 # Generated per-target Zensical configs (written by scripts/prebuild.py)
 /zensical.apex.toml
-/zensical.candela.toml
 /zensical.docs.toml
+
+# Node build artifacts for the Candela landing (Vite + React)
+node_modules/
+/apps/candela/node_modules/
+*.tsbuildinfo
+# install.sh is fetched fresh from the candela repo, never committed
+/apps/candela/public/install.sh
 
 # Zensical static output
 /dist/
