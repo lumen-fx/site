@@ -4,7 +4,7 @@ export function FeelCallout() {
   return (
     <section className="section" id="feel">
       <div className="container">
-        <div className="section__head">
+        <div className="section__head" data-reveal>
           <span className="eyebrow">What you feel</span>
           <h2 className="section__title">Fast where a UI developer notices</h2>
           <p className="section__lead">
@@ -12,8 +12,8 @@ export function FeelCallout() {
           </p>
         </div>
         <div className="row g-4">
-          {GUARANTEES.map((g) => (
-            <div className="col-md-4" key={g.value}>
+          {GUARANTEES.map((g, i) => (
+            <div className="col-md-4" key={g.value} data-reveal style={{ transitionDelay: `${i * 80}ms` }}>
               <div className="guarantee h-100">
                 <div className="guarantee__value">{g.value}</div>
                 <div className="guarantee__label">{g.label}</div>

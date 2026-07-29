@@ -9,15 +9,16 @@ export function Showcase() {
   return (
     <section className="section section--muted" id="showcase">
       <div className="container">
-        <div className="section__head">
-          <span className="eyebrow">The reactive loop</span>
-          <h2 className="section__title">Markup binds, script mutates, the view re-derives</h2>
+        <div className="section__head" data-reveal>
+          <span className="eyebrow">The dynamic DOM</span>
+          <h2 className="section__title">Query a node in candela, build its children</h2>
           <p className="section__lead">
-            One counter across the three files that make up a Lumen app.
+            Markup declares an empty container; candela queries it on the DOM API and
+            appends a row per item. The same app across its files.
           </p>
         </div>
 
-        <div className="showcase">
+        <div className="showcase" data-reveal>
           <div className="showcase__tabs" role="tablist" aria-label="The files of a Lumen app">
             {SNIPPETS.map((s) => (
               <button

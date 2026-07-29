@@ -6,7 +6,7 @@ export function CapabilityMatrix() {
   return (
     <section className="section" id="scope">
       <div className="container">
-        <div className="section__head">
+        <div className="section__head" data-reveal>
           <span className="eyebrow">Scope</span>
           <h2 className="section__title">What ships today, and what is next</h2>
           <p className="section__lead">
@@ -14,7 +14,7 @@ export function CapabilityMatrix() {
             is planned.
           </p>
         </div>
-        <div className="matrix">
+        <div className="matrix" data-reveal>
           <div className="row g-4">
             <div className="col-md-7">
               <div className="matrix-col matrix-col--today">

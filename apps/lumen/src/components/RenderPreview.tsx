@@ -1,39 +1,24 @@
-import { useState } from "react";
+import { STACK_ROWS } from "../data";
 
-// The signature element: the counter from the hero markup, rendered as a live
-// window. Clicking the buttons drives the same count the .lmn/script sample
-// describes, so the panel shows what the markup on the left turns into.
+// The window the hero markup renders to: the list the candela snippet builds by
+// querying "#stack" and appending a row per crate. Its own colours, not the
+// site's, so it reads as a real app rather than a piece of the page.
 export function RenderPreview() {
-  const [count, setCount] = useState(0);
-
   return (
-    <div className="render" aria-label="The counter markup, running">
+    <div className="render" aria-label="The rendered window">
       <div className="render__chrome">
         <span className="render__dot" />
         <span className="render__dot" />
         <span className="render__dot" />
-        <span className="render__title">Counter</span>
+        <span className="render__title">the stack</span>
       </div>
-      <div className="render__body">
-        <div className="render__count" aria-live="polite">
-          {count}
-        </div>
-        <div className="render__row">
-          <button
-            type="button"
-            className="render__btn render__btn--primary"
-            onClick={() => setCount((c) => c + 1)}
-          >
-            +1
-          </button>
-          <button
-            type="button"
-            className="render__btn"
-            onClick={() => setCount(0)}
-          >
-            reset
-          </button>
-        </div>
+      <div className="render__body render__body--list">
+        <div className="render__list-title">the stack</div>
+        {STACK_ROWS.map((name) => (
+          <div className="render__crate" key={name}>
+            {name}
+          </div>
+        ))}
       </div>
     </div>
   );

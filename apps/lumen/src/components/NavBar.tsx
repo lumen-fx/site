@@ -13,7 +13,8 @@ export function NavBar({ theme, onToggleTheme }: { theme: "light" | "dark"; onTo
           <a className="site-nav__link d-none d-sm-inline" href={DOCS_URL}>
             Docs
           </a>
-          <a className="site-nav__link d-none d-sm-inline" href={CANDELA_URL}>
+          <a className="site-nav__link d-none d-sm-inline site-nav__link--icon" href={CANDELA_URL}>
+            <img src="/candela-logo.svg" width={15} height={15} alt="" aria-hidden="true" />
             Candela
           </a>
           <a className="site-nav__link d-none d-sm-inline" href={REPO_URL}>

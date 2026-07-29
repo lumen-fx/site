@@ -7,18 +7,33 @@ export const DOCS_URL = "https://docs.lumenfx.dev/";
 export const RELEASES_URL = "https://github.com/lumen-fx/lumen/releases/latest";
 export const CANDELA_URL = "https://candela.lumenfx.dev/";
 export const LICENSE_URL = "https://github.com/lumen-fx/lumen/blob/main/LICENSE";
+export const BENCH_URL = "https://github.com/lumen-fx/lumen/tree/main/tools/startup-bench";
 
 // The documented one-line install for the prebuilt toolchain.
 export const INSTALL_CMD = "curl -fsSL https://lumenfx.dev/install.sh | sh";
 
-// The hero markup: a small counter, the same app the render preview shows.
-export const HERO_LMN = `<root padding="28" gap="18" align="center">
-  <label id="count" class="display" text="0" />
-  <row gap="12">
-    <button id="bump" class="primary" text="+1" />
-    <button id="reset" text="reset" />
-  </row>
+// The hero sample: candela on the dynamic DOM API. on_ready fires after the DOM
+// mounts; the script queries a container and builds its children. This is the
+// same list the render preview shows.
+export const HERO_CDL = `import "com.lumen.cdl";
+
+fn on_ready() {
+    let list = node_query("#stack");
+    let crates = ["vello", "taffy", "winit", "cosmic-text"];
+    for name in crates {
+        lm_append(list, "row", "crate", name);
+    }
+}`;
+
+// The container the script fills. No markup for the rows: candela spawns them.
+export const HERO_LMN = `<root padding="22" gap="12">
+  <label class="title" text="the stack" />
+  <column id="stack" gap="8" />
+  <script src="main.cdl" />
 </root>`;
+
+// The rows the render preview shows, built by the candela snippet above.
+export const STACK_ROWS = ["vello", "taffy", "winit", "cosmic-text"];
 
 export interface Feature {
   tag: string;
@@ -98,23 +113,20 @@ export interface Snippet {
   code: string;
 }
 
-// The three files of a Lumen app, shown as one coherent counter: markup names
-// the widgets, CSS themes them, and the script wires the reactive loop.
+// One app across its files: markup declares a container, CSS themes the rows,
+// and candela queries the container and builds the rows on the dynamic DOM API.
 export const SNIPPETS: Snippet[] = [
   {
     id: "markup",
     label: "main.lmn",
     lang: "lmn",
-    caption: "A tree of widgets. Every id is a handle the script and styles can reach.",
+    caption: "An empty container with an id. The script fills it; no rows are hand-written.",
     code: `<root>
-  <column padding="24" gap="12" align="center">
-    <label id="count" class="display" text="0" bind-text="clicks" />
-    <row gap="12">
-      <button id="bump" class="primary" text="Click me" />
-      <button id="reset" text="Reset" />
-    </row>
+  <column padding="22" gap="12">
+    <label class="title" text="the stack" />
+    <column id="stack" gap="8" />
   </column>
-  <script src="main.rhai" />
+  <script src="main.cdl" />
 </root>`,
   },
   {
@@ -123,40 +135,54 @@ export const SNIPPETS: Snippet[] = [
     lang: "css",
     caption: "Tokens on :root, referenced with var(). Familiar selectors and states.",
     code: `:root {
-  --accent: #5fd9e0;
-  --surface: #163459;
+  --accent: #2fd6cf;
+  --surface: #12313a;
 }
 
-.display { font-size: 72; text-align: center; }
+.title { font-size: 22; text-color: #cfeee9; }
 
-.primary {
+.crate {
   bg: var(--surface);
-  text-color: #ffffff;
-  radius: 22;
-  hover-bg: #1d4477;
-}
-.primary:focus { outline: 2 var(--accent); }`,
+  text-color: #eafcfa;
+  padding: 10;
+  radius: 8;
+  hover-bg: #17414c;
+}`,
   },
   {
     id: "script",
-    label: "main.rhai",
+    label: "main.cdl",
     lang: "script",
-    caption: "on_start runs once. A click writes the signal; the bound label re-renders.",
-    code: `fn on_start() {
-    signal("clicks", 0);
-    on("click", "bump", "handle_bump");
-    on("click", "reset", "handle_reset");
-}
+    caption: "on_ready fires once the DOM mounts. Query the container, append a row per item.",
+    code: `import "com.lumen.cdl";
 
-fn handle_bump(id) {
-    let n = signal("clicks", 0);
-    n.set(n.get() + 1);
-}
-
-fn handle_reset(id) {
-    signal("clicks", 0).set(0);
+fn on_ready() {
+    let list = node_query("#stack");
+    let crates = ["vello", "taffy", "winit", "cosmic-text"];
+    for name in crates {
+        lm_append(list, "row", "crate", name);
+    }
 }`,
   },
+];
+
+// Freshly measured on tools/startup-bench: counter app, offscreen, warm median
+// of 9 runs; cold is the first (cache-cold) run. Only measured, reproducible
+// rows appear here. Peers that render their own scene (Qt Quick) vs. native OS
+// widgets (Qt Widgets) are both shown, because they answer different questions.
+export interface BenchRow {
+  framework: string;
+  note?: string;
+  cold: string;
+  warm: string;
+  rss: string;
+  self?: boolean;
+}
+
+export const BENCH: BenchRow[] = [
+  { framework: "Lumen", note: "own GPU scene", cold: "63", warm: "73", rss: "74", self: true },
+  { framework: "Qt Quick", note: "own GPU scene", cold: "318", warm: "31", rss: "46" },
+  { framework: "Qt Widgets", note: "native OS widgets", cold: "18", warm: "19", rss: "29" },
 ];
 
 export interface Guarantee {
