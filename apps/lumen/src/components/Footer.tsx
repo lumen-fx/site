@@ -12,7 +12,7 @@ export function Footer() {
               <span className="site-nav__wordmark">lumen</span>
             </div>
             <p className="site-footer__blurb">
-              A Rust UI framework for native desktop apps: markup and real CSS, reactive signals,
+              A Rust UI framework for native desktop apps: markup and CSS, reactive signals,
               and hot reload.
             </p>
           </div>

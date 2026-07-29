@@ -2,6 +2,7 @@ import { NavBar } from "./components/NavBar";
 import { Hero } from "./components/Hero";
 import { Features } from "./components/Features";
 import { Showcase } from "./components/Showcase";
+import { Sdks } from "./components/Sdks";
 import { FeelCallout } from "./components/FeelCallout";
 import { Benchmarks } from "./components/Benchmarks";
 import { CapabilityMatrix } from "./components/CapabilityMatrix";
@@ -23,6 +24,7 @@ export function App() {
         <Hero />
         <Features />
         <Showcase />
+        <Sdks />
         <FeelCallout />
         <Benchmarks />
         <CapabilityMatrix />

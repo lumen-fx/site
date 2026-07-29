@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { CodeBlock } from "./CodeBlock";
-import { RenderPreview } from "./RenderPreview";
-import { DOCS_URL, HERO_CDL, INSTALL_CMD, REPO_URL, RELEASES_URL } from "../data";
+import { FRAME, DOCS_URL, HERO_CDL, INSTALL_CMD, REPO_URL, RELEASES_URL } from "../data";
 
 // Readouts are qualitative posture, not drifting figures. The measured numbers
 // live in the benchmarks panel below, where they are sourced and reproducible.
@@ -9,6 +8,15 @@ const READOUTS = [
   { k: "click", v: "next frame" },
   { k: "idle", v: "0% cpu" },
   { k: "save", v: "no restart" },
+];
+
+// A real measured element in place of a mock window: Lumen's frame time while
+// scrolling a 10,000-row list. It holds a single 60 Hz frame (16.7 ms budget).
+const BUDGET = 16.67;
+const PCTS = [
+  { k: "p50", v: FRAME.p50 },
+  { k: "p95", v: FRAME.p95 },
+  { k: "p99", v: FRAME.p99 },
 ];
 
 export function Hero() {
@@ -46,8 +54,8 @@ export function Hero() {
               <span className="lit">Lumen renders it.</span>
             </h1>
             <p className="hero__tagline">
-              A Rust UI framework for native desktop apps. Real CSS, reactive signals,
-              and hot reload that keeps your state.
+              A Rust UI framework for native desktop apps. The CSS you know, reactive
+              signals, and hot reload that keeps your state.
             </p>
 
             <div className="hero__cta">
@@ -90,10 +98,25 @@ export function Hero() {
           <div className="col-lg-6">
             <div className="hero__stack">
               <CodeBlock code={HERO_CDL} lang="script" label="main.cdl" />
-              <div className="hero__arrow" aria-hidden="true">
-                renders to
-              </div>
-              <RenderPreview />
+
+              <a className="hero-bench" href="#benchmarks">
+                <div className="hero-bench__head">
+                  <span className="hero-bench__title">frame time / ms, 10k-row scroll</span>
+                  <span className="hero-bench__hint">one 60 Hz frame</span>
+                </div>
+                {PCTS.map((p) => (
+                  <div className="hero-bench__row hero-bench__row--self" key={p.k}>
+                    <span className="hero-bench__name">{p.k}</span>
+                    <span className="hero-bench__track">
+                      <span
+                        className="hero-bench__bar"
+                        style={{ width: `${(Number(p.v) / BUDGET) * 100}%` }}
+                      />
+                    </span>
+                    <span className="hero-bench__val">{p.v}</span>
+                  </div>
+                ))}
+              </a>
             </div>
           </div>
         </div>

@@ -1,27 +1,27 @@
-import { BENCH, BENCH_URL } from "../data";
+import { BENCH, FRAME, BENCH_URL } from "../data";
 
-// Measured startup + memory, straight from tools/startup-bench. Cold is the
-// first launch (caches empty); warm is the steady-state median. Lumen's edge is
-// cold start; the fair peer is Qt Quick, which renders its own scene like Lumen.
+// The same app built in eight frameworks, measured the same way. Startup is
+// exec to first frame; memory is idle PSS; binary is the stripped file. Lumen
+// sits mid-pack on startup and holds one frame under scroll load.
 export function Benchmarks() {
   return (
     <section className="section section--muted" id="benchmarks">
       <div className="container">
         <div className="section__head" data-reveal>
           <span className="eyebrow">Measured</span>
-          <h2 className="section__title">Cold start is what a first launch feels like</h2>
+          <h2 className="section__title">The same app in eight frameworks</h2>
           <p className="section__lead">
-            The same small app in each framework, offscreen, warm median of nine runs. Lumen
-            reaches its first frame about five times sooner than Qt Quick, the peer that also
-            composites its own scene on the GPU.
+            One app, built and measured the same way in each framework. Lumen holds a
+            single 60 Hz frame while scrolling 10,000 rows ({FRAME.p50}/{FRAME.p95}/{FRAME.p99} ms
+            at p50/p95/p99), and sits mid-pack on startup and memory.
           </p>
         </div>
 
         <div className="bench" data-reveal>
           <div className="bench__bar">
-            <span className="bench__title">startup + memory / cold vs warm</span>
+            <span className="bench__title">startup + idle memory / hello app</span>
             <a className="bench__note" href={BENCH_URL}>
-              tools/startup-bench &gt;
+              lumen-benchmarks &gt;
             </a>
           </div>
           <div style={{ overflowX: "auto" }}>
@@ -29,9 +29,9 @@ export function Benchmarks() {
               <thead>
                 <tr>
                   <th>framework</th>
-                  <th>cold ms</th>
-                  <th>warm ms</th>
-                  <th>rss mb</th>
+                  <th>startup ms</th>
+                  <th>idle mem mb</th>
+                  <th>binary mb</th>
                 </tr>
               </thead>
               <tbody>
@@ -41,9 +41,9 @@ export function Benchmarks() {
                       {r.framework}
                       {r.note ? <span className="bench__rownote"> {r.note}</span> : null}
                     </td>
-                    <td>{r.cold}</td>
-                    <td>{r.warm}</td>
-                    <td>{r.rss}</td>
+                    <td>{r.startup}</td>
+                    <td>{r.mem}</td>
+                    <td>{r.binary}</td>
                   </tr>
                 ))}
               </tbody>
@@ -51,9 +51,9 @@ export function Benchmarks() {
           </div>
         </div>
         <p className="bench__caption" data-reveal>
-          Qt Widgets draws native OS controls and paints little itself, so it is a floor,
-          not a peer. RSS counts shared-clean library pages; the fair cross-framework memory
-          figure is lower. Numbers are reproducible from the harness.
+          Startup is exec to first frame. Memory is idle PSS; the toolkit frameworks link
+          tens of MiB of shared libraries the binary column does not count. Full method,
+          frame-time percentiles, and per-app results are in the suite.
         </p>
       </div>
     </section>

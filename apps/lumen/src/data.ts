@@ -7,33 +7,33 @@ export const DOCS_URL = "https://docs.lumenfx.dev/";
 export const RELEASES_URL = "https://github.com/lumen-fx/lumen/releases/latest";
 export const CANDELA_URL = "https://candela.lumenfx.dev/";
 export const LICENSE_URL = "https://github.com/lumen-fx/lumen/blob/main/LICENSE";
-export const BENCH_URL = "https://github.com/lumen-fx/lumen/tree/main/tools/startup-bench";
+export const BENCH_URL = "https://github.com/lumen-fx/lumen-benchmarks";
 
 // The documented one-line install for the prebuilt toolchain.
 export const INSTALL_CMD = "curl -fsSL https://lumenfx.dev/install.sh | sh";
 
 // The hero sample: candela on the dynamic DOM API. on_ready fires after the DOM
-// mounts; the script queries a container and builds its children. This is the
-// same list the render preview shows.
+// mounts; the script queries a container and builds one row per item. The render
+// preview shows the menu it produces.
 export const HERO_CDL = `import "com.lumen.cdl";
 
 fn on_ready() {
-    let list = node_query("#stack");
-    let crates = ["vello", "taffy", "winit", "cosmic-text"];
-    for name in crates {
-        lm_append(list, "row", "crate", name);
+    let menu = node_query("#menu");
+    for item in ["Account", "Display", "Privacy"] {
+        lm_append(menu, "row", "item", item);
     }
 }`;
 
-// The container the script fills. No markup for the rows: candela spawns them.
+// The container the script fills. The rows are not hand-written: candela spawns
+// them from the data.
 export const HERO_LMN = `<root padding="22" gap="12">
-  <label class="title" text="the stack" />
-  <column id="stack" gap="8" />
+  <label class="title" text="Settings" />
+  <column id="menu" gap="8" />
   <script src="main.cdl" />
 </root>`;
 
 // The rows the render preview shows, built by the candela snippet above.
-export const STACK_ROWS = ["vello", "taffy", "winit", "cosmic-text"];
+export const MENU_ROWS = ["Account", "Display", "Privacy"];
 
 export interface Feature {
   tag: string;
@@ -44,7 +44,7 @@ export interface Feature {
 export const FEATURES: Feature[] = [
   {
     tag: "markup + css",
-    title: "Markup and real CSS",
+    title: "Markup and CSS",
     body: "Describe an interface as a tree of widgets in .lmn markup, then style it with a CSS cascade you already know: selectors, variables, flexbox, and grid.",
   },
   {
@@ -84,8 +84,7 @@ export const FEATURES: Feature[] = [
   },
 ];
 
-// Scope: what runs now versus what is on the roadmap. Kept honest about the
-// edges rather than blurring the two.
+// Scope: what runs now versus what is on the roadmap, kept separate.
 export const SHIPPING: string[] = [
   "One-line install of the prebuilt lumenc",
   "Linux, macOS, and Windows desktop",
@@ -103,6 +102,60 @@ export const PLANNED: string[] = [
   "Multi-window apps",
   "Keyframe and spring animation",
   "Built-in in-window devtools",
+];
+
+// Drive Lumen from a host language: own the state and event handlers instead of
+// scripting them. Each SDK sits on the same C ABI.
+export interface Sdk {
+  name: string;
+  install: string;
+  blurb: string;
+  lang: Lang;
+  code: string;
+}
+
+export const SDKS: Sdk[] = [
+  {
+    name: "Rust",
+    install: "cargo add lumenui",
+    blurb: "Typed signals and native handlers from Rust, no script host in between.",
+    lang: "script",
+    code: `use lumenui::App;
+
+fn main() {
+    App::new("app/main.lmn")
+        .on("save", |ui| ui.signal("count").add(1))
+        .run();
+}`,
+  },
+  {
+    name: "Python",
+    install: "pip install lumenui",
+    blurb: "Bind signals and handlers from Python; the runtime stays native.",
+    lang: "script",
+    code: `import lumenui
+
+app = lumenui.App("app/main.lmn")
+
+@app.on("save")
+def save(ui):
+    ui.signal("count").add(1)
+
+app.run()`,
+  },
+  {
+    name: "C / C++",
+    install: "#include <lumen.h>",
+    blurb: "The C ABI with shipped headers. Drive the window from C or C++.",
+    lang: "script",
+    code: `#include <lumen.h>
+
+int main(void) {
+    LumenApp *app = lumen_app_new("app/main.lmn");
+    lumen_on(app, "save", on_save, NULL);
+    return lumen_run(app);
+}`,
+  },
 ];
 
 export interface Snippet {
@@ -123,8 +176,8 @@ export const SNIPPETS: Snippet[] = [
     caption: "An empty container with an id. The script fills it; no rows are hand-written.",
     code: `<root>
   <column padding="22" gap="12">
-    <label class="title" text="the stack" />
-    <column id="stack" gap="8" />
+    <label class="title" text="Settings" />
+    <column id="menu" gap="8" />
   </column>
   <script src="main.cdl" />
 </root>`,
@@ -141,7 +194,7 @@ export const SNIPPETS: Snippet[] = [
 
 .title { font-size: 22; text-color: #cfeee9; }
 
-.crate {
+.item {
   bg: var(--surface);
   text-color: #eafcfa;
   padding: 10;
@@ -157,33 +210,42 @@ export const SNIPPETS: Snippet[] = [
     code: `import "com.lumen.cdl";
 
 fn on_ready() {
-    let list = node_query("#stack");
-    let crates = ["vello", "taffy", "winit", "cosmic-text"];
-    for name in crates {
-        lm_append(list, "row", "crate", name);
+    let menu = node_query("#menu");
+    for item in ["Account", "Display", "Privacy"] {
+        lm_append(menu, "row", "item", item);
     }
 }`,
   },
 ];
 
-// Freshly measured on tools/startup-bench: counter app, offscreen, warm median
-// of 9 runs; cold is the first (cache-cold) run. Only measured, reproducible
-// rows appear here. Peers that render their own scene (Qt Quick) vs. native OS
-// widgets (Qt Widgets) are both shown, because they answer different questions.
+// The same app built in eight frameworks and measured the same way; from the
+// lumen-benchmarks suite (hello: startup floor + idle memory + binary), sorted
+// by startup. Startup is exec to first frame. Memory is idle PSS in MiB. Binary
+// is the stripped on-disk size; the toolkit frameworks link tens of MiB of
+// shared libraries not counted here.
 export interface BenchRow {
   framework: string;
   note?: string;
-  cold: string;
-  warm: string;
-  rss: string;
+  startup: string;
+  mem: string;
+  binary: string;
   self?: boolean;
 }
 
 export const BENCH: BenchRow[] = [
-  { framework: "Lumen", note: "own GPU scene", cold: "63", warm: "73", rss: "74", self: true },
-  { framework: "Qt Quick", note: "own GPU scene", cold: "318", warm: "31", rss: "46" },
-  { framework: "Qt Widgets", note: "native OS widgets", cold: "18", warm: "19", rss: "29" },
+  { framework: "Slint", startup: "51", mem: "47", binary: "19.4" },
+  { framework: "Qt Widgets", note: "native", startup: "55", mem: "24", binary: "0.2 + toolkit" },
+  { framework: "GTK4", note: "native", startup: "55", mem: "38", binary: "0.0 + toolkit" },
+  { framework: "egui", startup: "59", mem: "48", binary: "18.8" },
+  { framework: "iced", startup: "92", mem: "58", binary: "14.3" },
+  { framework: "Lumen", note: "own renderer", startup: "104", mem: "63", binary: "22.4", self: true },
+  { framework: "Flutter", note: "own engine", startup: "127", mem: "78", binary: "5.1 + engine" },
+  { framework: "Tauri", note: "webview", startup: "164", mem: "59", binary: "5.3 + webkit" },
 ];
+
+// Lumen's frame time while scrolling a 10,000-row list at 1000 px/s: it holds a
+// single 60 Hz frame. Percentiles in ms, from the same suite.
+export const FRAME = { p50: "16.5", p95: "17.0", p99: "17.0" };
 
 export interface Guarantee {
   value: string;

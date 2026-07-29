@@ -249,12 +249,14 @@ code {
   color: var(--signal);
 }
 .site-nav__link--icon {
-  display: inline-flex;
+  display: inline-flex !important; /* beat Bootstrap .d-sm-inline */
   align-items: center;
   gap: 0.4rem;
+  vertical-align: middle;
 }
 .site-nav__link--icon img {
   display: block;
+  flex: none;
 }
 .theme-toggle {
   font-family: var(--font-mono);
@@ -356,6 +358,77 @@ code {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.4rem;
+}
+
+/* ---- Hero measured readout (real element, not a mock) ------------------ */
+.hero-bench {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 0.9rem 1rem 1rem;
+  color: inherit;
+}
+.hero-bench:hover {
+  text-decoration: none;
+  border-color: var(--line-2);
+}
+.hero-bench__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.7rem;
+}
+.hero-bench__title {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.hero-bench__hint {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--faint);
+}
+.hero-bench__row {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr 2.4rem;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.28rem 0;
+}
+.hero-bench__name {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--dim);
+}
+.hero-bench__row--self .hero-bench__name {
+  color: var(--signal);
+  font-weight: 600;
+}
+.hero-bench__track {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--panel-2);
+  overflow: hidden;
+}
+.hero-bench__bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 4px;
+  background: var(--line-2);
+}
+.hero-bench__row--self .hero-bench__bar {
+  background: linear-gradient(90deg, var(--blue), var(--signal));
+}
+.hero-bench__val {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---- Buttons ----------------------------------------------------------- */
@@ -694,6 +767,28 @@ code {
   color: var(--dim);
   font-size: 0.94rem;
   margin-bottom: 0.8rem;
+}
+
+/* ---- SDK meta ---------------------------------------------------------- */
+.sdk__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.9rem;
+  margin-bottom: 0.85rem;
+}
+.sdk__install {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--signal);
+  border: 1px solid var(--signal-line);
+  background: var(--signal-dim);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.6rem;
+}
+.sdk__blurb {
+  color: var(--dim);
+  font-size: 0.94rem;
 }
 
 /* ---- Perf posture: instrument tiles ------------------------------------ */

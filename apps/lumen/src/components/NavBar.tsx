@@ -10,16 +10,24 @@ export function NavBar({ theme, onToggleTheme }: { theme: "light" | "dark"; onTo
           <span className="site-nav__wordmark">lumen</span>
         </a>
         <div className="d-flex align-items-center gap-1 gap-sm-3">
-          <a className="site-nav__link d-none d-sm-inline" href={DOCS_URL}>
-            Docs
-          </a>
-          <a className="site-nav__link d-none d-sm-inline site-nav__link--icon" href={CANDELA_URL}>
-            <img src="/candela-logo.svg" width={15} height={15} alt="" aria-hidden="true" />
-            Candela
-          </a>
-          <a className="site-nav__link d-none d-sm-inline" href={REPO_URL}>
-            GitHub
-          </a>
+          <div className="d-none d-sm-flex align-items-center gap-3">
+            <a className="site-nav__link" href="#sdks">
+              SDKs
+            </a>
+            <a className="site-nav__link" href="#benchmarks">
+              Benchmarks
+            </a>
+            <a className="site-nav__link" href={DOCS_URL}>
+              Docs
+            </a>
+            <a className="site-nav__link site-nav__link--icon" href={CANDELA_URL}>
+              <img src="/candela-logo.svg" width={16} height={16} alt="" aria-hidden="true" />
+              Candela
+            </a>
+            <a className="site-nav__link" href={REPO_URL}>
+              GitHub
+            </a>
+          </div>
           <button
             type="button"
             className="theme-toggle"
