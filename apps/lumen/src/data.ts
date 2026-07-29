@@ -94,7 +94,7 @@ export const SHIPPING: string[] = [
   "Accessibility tree, IME, and Unicode BiDi",
   "Plugin registry via lumenc add",
   "Light and dark via prefers-color-scheme",
-  "Virtualized lists",
+  "Virtualized lists and long content",
 ];
 
 export const PLANNED: string[] = [
