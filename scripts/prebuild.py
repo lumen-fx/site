@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Assemble the docs_dir and generate the Zensical config for each Zensical target.
 
-The site has three static builds. Two are Zensical -- apex (the Lumen landing)
-and docs (the unified docs) -- and share one theme; this script prepares those.
-The third, the Candela landing, is a separate Vite + React app under apps/candela
-(built with npm, not Zensical), so it is not handled here.
+The site has three static builds. One is Zensical -- docs (the unified docs) --
+and this script prepares it. The other two, the Lumen landing (apps/lumen, served
+at the apex) and the Candela landing (apps/candela), are Vite + React apps built
+with npm, not Zensical, so they are not handled here.
 
 Each Zensical target has its own docs_dir (site source) and its own generated
 config. Product docs are fetched fresh from each product repo at build time and
@@ -65,14 +65,10 @@ def _candela_clone() -> dict:
     }
 
 
-# The three build targets. Each becomes its own static site rooted at "/".
+# The Zensical build targets. Each becomes its own static site rooted at "/".
+# Only docs is Zensical; the apex (Lumen) and candela landings are Vite + React
+# apps under apps/, built with npm, and are not handled here.
 TARGETS = [
-    {
-        # Lumen landing at the root of lumenfx.dev.
-        "name": "apex",
-        "content_dir": CONTENT / "apex",
-        "clones": [],
-    },
     {
         # Unified docs at the root of docs.lumenfx.dev.
         "name": "docs",

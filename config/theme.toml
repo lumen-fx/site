@@ -1,14 +1,16 @@
-# Shared theme fragment for every build target (apex, candela, docs).
+# Shared Zensical theme fragment. Only the docs target is Zensical (the apex and
+# candela landings are Vite + React apps), so this feeds the docs build today. It
+# is kept as a reusable fragment in case another Zensical target is added later.
 #
-# This file holds everything the three sites share: palette, feature toggles,
-# icons, social links, and the Markdown extension set. It is NOT a standalone
-# Zensical config -- it has no [project] scalars, no site_url, no nav. The
-# prebuild (scripts/prebuild.py) concatenates a per-target file from config/
-# (which owns the [project] block: site_url, docs_dir, site_dir, nav) in front
-# of this fragment to produce the full config for each target.
+# This file holds the theme: palette, feature toggles, icons, social links, and
+# the Markdown extension set. It is NOT a standalone Zensical config -- it has no
+# [project] scalars, no site_url, no nav. The prebuild (scripts/prebuild.py)
+# concatenates a per-target file from config/ (which owns the [project] block:
+# site_url, docs_dir, site_dir, nav) in front of this fragment to produce the
+# full config.
 #
-# Keep the theme here so it is defined once. Per-target differences live in
-# config/apex.toml, config/candela.toml, config/docs.toml.
+# Keep the theme here so it is defined once. Per-target [project] blocks live in
+# config/docs.toml.
 
 # ----------------------------------------------------------------------------
 # Theme

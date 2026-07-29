@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lumen">
+  <!-- Placeholder Lumen mark: a luminous aperture on the brand navy. Not the final logo. -->
+  <rect width="64" height="64" rx="14" fill="#0f1d38"/>
+  <circle cx="32" cy="32" r="17" fill="none" stroke="#35d0d8" stroke-width="3.2" opacity="0.5"/>
+  <circle cx="32" cy="32" r="10" fill="#35d0d8"/>
+  <circle cx="28.5" cy="28.5" r="3.4" fill="#a6f0f2"/>
+</svg>

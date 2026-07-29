@@ -7,20 +7,20 @@ Cloudflare Pages project.
 Two build styles live here:
 
 - The **landings** are bespoke custom static sites, free to look however they
-  should. The Candela landing is a Vite + React + TypeScript app styled with
-  Bootstrap (`apps/candela/`). The apex (Lumen) landing is still Zensical for
-  now and is slated to become custom later.
+  should. Both are Vite + React + TypeScript apps styled with Bootstrap: the
+  Lumen landing at the apex (`apps/lumen/`) and the Candela landing
+  (`apps/candela/`).
 - The **docs** are [Zensical](https://zensical.org): one unified build carrying
   both products' docs so search spans them.
 
-This is an early scaffold. The apex landing copy and the Lumen docs slot are
-placeholders, and the logo art is a placeholder (see [Placeholders](#placeholders)).
+This is an early scaffold. The Lumen docs slot is a placeholder, and the logo art
+is a placeholder (see [Placeholders](#placeholders)).
 
 ## The three targets
 
 | Target    | Domain                | Pages project     | Build          | Serves                     |
 | --------- | --------------------- | ----------------- | -------------- | -------------------------- |
-| `apex`    | `lumenfx.dev`         | `lumenfx`         | Zensical       | The Lumen landing          |
+| `apex`    | `lumenfx.dev`         | `lumenfx`         | Vite + React   | The Lumen landing          |
 | `candela` | `candela.lumenfx.dev` | `lumenfx-candela` | Vite + React   | The Candela landing        |
 | `docs`    | `docs.lumenfx.dev`    | `lumenfx-docs`    | Zensical       | Unified docs, one search   |
 
@@ -38,19 +38,20 @@ The `docs` target carries both products' docs so search is unified:
 
 ## What is here
 
+- `apps/lumen/` -- the Lumen landing at the apex: a Vite + React + TypeScript app
+  styled with Bootstrap, built to `dist/apex/`. `public/favicon.svg` is the Lumen
+  placeholder mark.
 - `apps/candela/` -- the Candela landing: a Vite + React + TypeScript app styled
-  with Bootstrap. Component-structured under `src/components/` so the apex
-  landing can reuse the same setup later. `public/favicon.svg` is the Candela
-  placeholder mark; `public/install.sh` is fetched fresh, not committed.
+  with Bootstrap. `public/favicon.svg` is the Candela placeholder mark;
+  `public/install.sh` is fetched fresh, not committed.
 - `content/shared/` -- Zensical theme assets (stylesheets, favicon) copied into
-  the apex and docs targets.
-- `content/apex/index.md` -- the Lumen landing (Zensical).
+  the docs target.
 - `content/docs/` -- the docs home (`index.md`) and the Lumen docs stub
   (`lumen/index.md`).
 - `config/theme.toml` -- the shared Zensical theme, defined once.
-- `config/{apex,docs}.toml` -- each Zensical target's `[project]` block.
-- `scripts/prebuild.py` -- assembles the apex and docs docs_dir and generates
-  their configs (clones the Candela docs for the docs target).
+- `config/docs.toml` -- the docs target's `[project]` block.
+- `scripts/prebuild.py` -- assembles the docs docs_dir and generates its config
+  (clones the Candela docs).
 - `scripts/fetch_candela_install.py` -- clones the candela repo and copies its
   `install.sh` into the Candela landing so it is served at
   `candela.lumenfx.dev/install.sh`.
@@ -64,18 +65,20 @@ fresh from the candela repo at build time.
 
 Each target builds into `dist/<target>/`, ready for `wrangler pages deploy`.
 
-**apex and docs (Zensical).** `scripts/prebuild.py` assembles each target's
-docs_dir under `build/<target>/docs` from `content/shared/` plus the target's
-own `content/<target>/`, cloning the Candela docs into `build/docs/docs/candela`
-for the docs target. It then writes `zensical.<target>.toml` at the repo root
-(the per-target `config/<target>.toml` block in front of `config/theme.toml`).
-`zensical build -f zensical.<target>.toml` builds each into `dist/<target>/`.
+**docs (Zensical).** `scripts/prebuild.py` assembles the docs docs_dir under
+`build/docs/docs` from `content/shared/` plus `content/docs/`, cloning the
+Candela docs into `build/docs/docs/candela`. It then writes `zensical.docs.toml`
+at the repo root (the `config/docs.toml` block in front of `config/theme.toml`).
+`zensical build -f zensical.docs.toml` builds it into `dist/docs/`.
+
+**apex / lumen (Vite + React).** `vite build` in `apps/lumen` produces a fully
+static, client-rendered SPA into `dist/apex/`, copying everything in `public/`
+(the favicon) to the output root.
 
 **candela (Vite + React).** `scripts/fetch_candela_install.py` clones the
 candela repo and drops its `install.sh` into `apps/candela/public/`. `vite build`
 then produces a fully static, client-rendered SPA into `dist/candela/`, copying
-everything in `public/` (the installer and the favicon) to the output root. No
-server, no Cloudflare Workers, no Pages Functions.
+everything in `public/` (the installer and the favicon) to the output root.
 
 ## Build locally
 
@@ -88,7 +91,14 @@ scripts/build.sh
 That builds all three targets into `dist/apex/`, `dist/candela/`, and
 `dist/docs/`.
 
-To work on just the Candela landing with hot reload:
+To work on just the Lumen landing with hot reload:
+
+```sh
+npm --prefix apps/lumen install
+npm --prefix apps/lumen run dev
+```
+
+The Candela landing works the same way, once its installer is fetched:
 
 ```sh
 uv run python scripts/fetch_candela_install.py   # once, to get install.sh
@@ -96,12 +106,12 @@ npm --prefix apps/candela install
 npm --prefix apps/candela run dev
 ```
 
-To build or serve a single Zensical target after a prebuild:
+To build or serve the docs target after a prebuild:
 
 ```sh
 uv run python scripts/prebuild.py
-uv run zensical build --strict -f zensical.docs.toml   # build just docs
-uv run zensical serve -f zensical.apex.toml            # serve just apex
+uv run zensical build --strict -f zensical.docs.toml   # build docs
+uv run zensical serve -f zensical.docs.toml            # serve docs
 ```
 
 ## Pinning the Candela revision
@@ -144,9 +154,10 @@ domains.
 - The Candela landing favicon (`apps/candela/public/favicon.svg`) is a placeholder
   flame mark, not the final logo. The candela repo already ships a finished flame
   logo (`assets/colored-logo.svg`) that can replace it once branding is settled.
-- The apex and docs targets still use the old shared favicon
+- The Lumen landing favicon (`apps/lumen/public/favicon.svg`) is a placeholder
+  aperture mark, not the final logo.
+- The docs target still uses the old shared favicon
   (`content/shared/images/favicon.png`), which is keel branding. Replace it when
-  Lumen and the docs get their own marks.
-- The apex landing copy and layout are a first pass, and apex is slated to move
-  from Zensical to a custom build like the Candela landing.
+  the docs get their own mark.
+- The Lumen landing copy and layout are a first pass.
 - The `/lumen/` docs section is a stub until the Lumen docs move to Zensical.

@@ -5,9 +5,9 @@ name: build-site
 # scripts/prebuild.py); nothing docs-related is committed here.
 #
 # Each target is a self-contained static build served at a domain root:
-#   apex    -> lumenfx.dev          Pages project: lumenfx
-#   candela -> candela.lumenfx.dev  Pages project: lumenfx-candela
-#   docs    -> docs.lumenfx.dev     Pages project: lumenfx-docs
+#   apex    -> lumenfx.dev          Pages project: lumenfx          (Vite + React)
+#   candela -> candela.lumenfx.dev  Pages project: lumenfx-candela  (Vite + React)
+#   docs    -> docs.lumenfx.dev     Pages project: lumenfx-docs     (Zensical)
 #
 # Pages projects are pure static (no Functions, no _middleware, no Workers).
 # Custom domains are attached per project in the Cloudflare dashboard by the
@@ -41,26 +41,32 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Set up Node (for the Candela landing)
+      - name: Set up Node (for the landings)
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: apps/candela/package-lock.json
+          cache-dependency-path: |
+            apps/lumen/package-lock.json
+            apps/candela/package-lock.json
 
       - name: Sync dependencies
         run: uv sync
 
-      # apex and docs are Zensical. prebuild assembles their docs_dir (cloning
-      # the candela docs fresh for docs) and generates their configs.
-      - name: Assemble apex + docs (clone product docs fresh)
+      # Only docs is Zensical now. prebuild assembles its docs_dir (cloning the
+      # candela docs fresh) and generates its config.
+      - name: Assemble docs (clone product docs fresh)
         run: uv run python scripts/prebuild.py
-
-      - name: Build apex (zensical)
-        run: uv run zensical build --strict -f zensical.apex.toml
 
       - name: Build docs (zensical)
         run: uv run zensical build --strict -f zensical.docs.toml
+
+      # The Lumen landing is a static Vite + React app; build it to dist/apex.
+      - name: Install lumen landing deps
+        run: npm --prefix apps/lumen ci
+
+      - name: Build lumen landing (vite)
+        run: npm --prefix apps/lumen run build
 
       # The Candela landing is a static Vite + React app. Fetch install.sh fresh
       # from the candela repo so it ships at candela.lumenfx.dev/install.sh, then
