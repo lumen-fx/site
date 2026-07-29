@@ -5,6 +5,7 @@ export function FeelCallout() {
     <section className="section" id="feel">
       <div className="container">
         <div className="section__head">
+          <span className="eyebrow">What you feel</span>
           <h2 className="section__title">Fast where a UI developer notices</h2>
           <p className="section__lead">
             How soon a click paints, what the app costs while it sits there, and how a save lands.

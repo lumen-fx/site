@@ -21,47 +21,73 @@ export const HERO_LMN = `<root padding="28" gap="18" align="center">
 </root>`;
 
 export interface Feature {
+  tag: string;
   title: string;
   body: string;
 }
 
 export const FEATURES: Feature[] = [
   {
+    tag: "markup + css",
     title: "Markup and real CSS",
     body: "Describe an interface as a tree of widgets in .lmn markup, then style it with a CSS cascade you already know: selectors, variables, flexbox, and grid.",
   },
   {
+    tag: "signals",
     title: "Reactive signals",
     body: "Name a value, bind it to a widget, and the loop closes. Edits flow back into the signal, and derived values flow out to every widget that reads them.",
   },
   {
+    tag: "hot reload",
     title: "Hot reload that keeps state",
     body: "Save any of the three files and the running window updates in place. Focus, scroll position, and signal values survive the swap, so you never lose your place.",
   },
   {
+    tag: "gpu paint",
     title: "Rendered on the GPU",
     body: "Every frame is composited as vector paths, crisp at any display scale, with full glyph shaping and flexbox and grid layout underneath.",
   },
   {
+    tag: "native desktop",
     title: "Native desktop",
     body: "One codebase runs on Linux, macOS, and Windows. lumenc compiles and runs your app against the platform's own window system and GPU.",
   },
   {
+    tag: "script hosts",
     title: "Choose your script language",
     body: "Wire behavior in candela, lua, or rhai. Lumen picks the host from the file extension, so a plugin and your app can each use the language that fits.",
   },
   {
+    tag: "ffi + sdks",
     title: "Drive it from your language",
     body: "Own the state and event handlers from Rust, C++, or Python instead. The lumenui package and a C ABI put typed signals and native handlers in your host.",
   },
   {
-    title: "The web, from the same source",
-    body: "Transpile the same app to a real DOM for the browser: elements and CSS, not a pixel buffer on a canvas.",
-  },
-  {
+    tag: "a11y + ime",
     title: "Accessible and global",
     body: "An accessibility tree, IME composition, and Unicode shaping for mixed left-to-right and right-to-left text come with the runtime.",
   },
+];
+
+// Scope: what runs now versus what is on the roadmap. Kept honest about the
+// edges rather than blurring the two.
+export const SHIPPING: string[] = [
+  "One-line install of the prebuilt lumenc",
+  "Linux, macOS, and Windows desktop",
+  "Hot reload of markup, CSS, and script",
+  "candela, lua, and rhai script hosts",
+  "C ABI with Rust, C++, and Python SDKs",
+  "Accessibility tree, IME, and Unicode BiDi",
+  "Plugin registry via lumenc add",
+  "Light and dark via prefers-color-scheme",
+  "Virtualized lists",
+];
+
+export const PLANNED: string[] = [
+  "Web target: the same source to a real DOM",
+  "Multi-window apps",
+  "Keyframe and spring animation",
+  "Built-in in-window devtools",
 ];
 
 export interface Snippet {
@@ -97,17 +123,17 @@ export const SNIPPETS: Snippet[] = [
     lang: "css",
     caption: "Tokens on :root, referenced with var(). Familiar selectors and states.",
     code: `:root {
-  --accent: #35d0d8;
-  --surface: #0f1d38;
+  --accent: #5fd9e0;
+  --surface: #163459;
 }
 
 .display { font-size: 72; text-align: center; }
 
 .primary {
-  bg: var(--accent);
-  text-color: var(--surface);
-  radius: 10;
-  hover-bg: #63e2e6;
+  bg: var(--surface);
+  text-color: #ffffff;
+  radius: 22;
+  hover-bg: #1d4477;
 }
 .primary:focus { outline: 2 var(--accent); }`,
   },

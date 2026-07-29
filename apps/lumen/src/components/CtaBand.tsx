@@ -9,7 +9,7 @@ export function CtaBand() {
           Install the toolchain, scaffold a starter with <code>lumenc new</code>, and it opens live.
         </p>
         <div className="hero__cta justify-content-center">
-          <a className="btn btn-beam btn-lg" href={DOCS_URL}>
+          <a className="btn btn-lit btn-lg" href={DOCS_URL}>
             Read the docs
           </a>
           <a className="btn btn-outline-soft btn-lg" href={REPO_URL}>

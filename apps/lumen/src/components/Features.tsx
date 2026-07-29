@@ -5,6 +5,7 @@ export function Features() {
     <section className="section" id="features">
       <div className="container">
         <div className="section__head">
+          <span className="eyebrow">Why Lumen</span>
           <h2 className="section__title">A small authoring surface over a serious runtime</h2>
           <p className="section__lead">
             Three files describe your app. Underneath, a native ECS core drives layout, styling,
@@ -15,6 +16,7 @@ export function Features() {
           {FEATURES.map((f) => (
             <div className="col-md-6 col-lg-4" key={f.title}>
               <div className="feature h-100">
+                <span className="feature__tag">{f.tag}</span>
                 <h3 className="feature__title">{f.title}</h3>
                 <p className="feature__body">{f.body}</p>
               </div>

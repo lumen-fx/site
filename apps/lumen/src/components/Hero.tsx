@@ -29,7 +29,7 @@ export function Hero() {
             </p>
 
             <div className="hero__cta">
-              <a className="btn btn-beam btn-lg" href={DOCS_URL}>
+              <a className="btn btn-lit btn-lg" href={DOCS_URL}>
                 Get started
               </a>
               <a className="btn btn-outline-soft btn-lg" href={REPO_URL}>

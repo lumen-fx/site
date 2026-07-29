@@ -10,6 +10,7 @@ export function Showcase() {
     <section className="section section--muted" id="showcase">
       <div className="container">
         <div className="section__head">
+          <span className="eyebrow">The reactive loop</span>
           <h2 className="section__title">Markup binds, script mutates, the view re-derives</h2>
           <p className="section__lead">
             One counter across the three files that make up a Lumen app.

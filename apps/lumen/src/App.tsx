@@ -3,6 +3,7 @@ import { Hero } from "./components/Hero";
 import { Features } from "./components/Features";
 import { Showcase } from "./components/Showcase";
 import { FeelCallout } from "./components/FeelCallout";
+import { CapabilityMatrix } from "./components/CapabilityMatrix";
 import { CtaBand } from "./components/CtaBand";
 import { Footer } from "./components/Footer";
 import { useTheme } from "./lib/useTheme";
@@ -18,6 +19,7 @@ export function App() {
         <Features />
         <Showcase />
         <FeelCallout />
+        <CapabilityMatrix />
         <CtaBand />
       </main>
       <Footer />
