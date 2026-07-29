@@ -31,32 +31,32 @@ example the Candela landing's "Get started" button points at
 
 The `docs` target carries both products' docs so search is unified:
 
-- `/candela/...` -- the Candela docs, cloned fresh from `lumen-fx/candela` at
+- `/candela/...`: the Candela docs, cloned fresh from `lumen-fx/candela` at
   build time.
-- `/lumen/...` -- a placeholder stub. The Lumen docs are an mdbook today and are
+- `/lumen/...`: a placeholder stub. The Lumen docs are an mdbook today and are
   not migrated yet.
 
 ## What is here
 
-- `apps/lumen/` -- the Lumen landing at the apex: a Vite + React + TypeScript app
+- `apps/lumen/`: the Lumen landing at the apex, a Vite + React + TypeScript app
   styled with Bootstrap, built to `dist/apex/`. `public/favicon.svg` is the Lumen
   placeholder mark.
-- `apps/candela/` -- the Candela landing: a Vite + React + TypeScript app styled
+- `apps/candela/`: the Candela landing, a Vite + React + TypeScript app styled
   with Bootstrap. `public/favicon.svg` is the Candela placeholder mark;
   `public/install.sh` is fetched fresh, not committed.
-- `content/shared/` -- Zensical theme assets (stylesheets, favicon) copied into
+- `content/shared/`: Zensical theme assets (stylesheets, favicon) copied into
   the docs target.
-- `content/docs/` -- the docs home (`index.md`) and the Lumen docs stub
+- `content/docs/`: the docs home (`index.md`) and the Lumen docs stub
   (`lumen/index.md`).
-- `config/theme.toml` -- the shared Zensical theme, defined once.
-- `config/docs.toml` -- the docs target's `[project]` block.
-- `scripts/prebuild.py` -- assembles the docs docs_dir and generates its config
+- `config/theme.toml`: the shared Zensical theme, defined once.
+- `config/docs.toml`: the docs target's `[project]` block.
+- `scripts/prebuild.py`: assembles the docs docs_dir and generates its config
   (clones the Candela docs).
-- `scripts/fetch_candela_install.py` -- clones the candela repo and copies its
+- `scripts/fetch_candela_install.py`: clones the candela repo and copies its
   `install.sh` into the Candela landing so it is served at
   `candela.lumenfx.dev/install.sh`.
-- `scripts/build.sh` -- builds all three targets locally.
-- `.github/workflows/build.yml` -- CI build and deploy.
+- `scripts/build.sh`: builds all three targets locally.
+- `.github/workflows/build.yml`: CI build and deploy.
 
 Product docs and the installer are **not** committed here. They are fetched
 fresh from the candela repo at build time.
@@ -140,7 +140,7 @@ markdown, add one clone entry to the docs target's `clones` list in
 
 CI builds all three targets and deploys each to its Cloudflare Pages project on
 push to `main` and on manual dispatch. Pull requests only build to validate;
-they do not deploy. The projects are pure static -- no Pages Functions, no
+they do not deploy. The projects are pure static: no Pages Functions, no
 `_middleware`, no Workers.
 
 The deploy uses org-level secrets: `CLOUDFLARE_ACCOUNT` (account id) and

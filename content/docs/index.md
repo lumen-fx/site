@@ -13,7 +13,7 @@ Documentation for Lumen and its scripting language, Candela. Search covers both.
 <div class="lx-card" markdown>
 ### Candela
 
-The language reference, standard library, and tutorial for Candela -- the fast,
+The language reference, standard library, and tutorial for Candela, the fast,
 statically-typed scripting language Lumen uses.
 
 [Read the Candela docs](candela/){ .md-button .md-button--primary }
@@ -32,6 +32,6 @@ The Lumen docs are being migrated to this site.
 
 ## Elsewhere
 
-- [lumenfx.dev](https://lumenfx.dev/) -- the Lumen landing.
-- [candela.lumenfx.dev](https://candela.lumenfx.dev/) -- the Candela landing.
-- [Lumen FX on GitHub](https://github.com/lumen-fx) -- source and issues.
+- [lumenfx.dev](https://lumenfx.dev/): the Lumen landing.
+- [candela.lumenfx.dev](https://candela.lumenfx.dev/): the Candela landing.
+- [Lumen FX on GitHub](https://github.com/lumen-fx): source and issues.

@@ -23,7 +23,7 @@ export function Hero() {
             <p className="hero__eyebrow">The Lumen scripting language</p>
             <h1 className="hero__title">candela</h1>
             <p className="hero__tagline">
-              A fast, statically-typed scripting language -- Rust-like syntax, Python's ease,
+              A fast, statically-typed scripting language: Rust-like syntax, Python's ease,
               a runtime under a megabyte.
             </p>
 

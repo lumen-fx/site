@@ -24,7 +24,7 @@ export function Hero() {
             <p className="hero__eyebrow">Rust UI framework for desktop</p>
             <h1 className="hero__title">Lumen</h1>
             <p className="hero__tagline">
-              Write the markup and the CSS. Lumen renders it to a real, native window, and
+              Write the markup and the CSS. Lumen renders it to a native window, and
               reloads as you save.
             </p>
 

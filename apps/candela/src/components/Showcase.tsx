@@ -11,7 +11,7 @@ export function Showcase() {
       <div className="container">
         <div className="section__head">
           <h2 className="section__title">Read it and it reads clearly</h2>
-          <p className="section__lead">Real Candela, straight from the language's own tests.</p>
+          <p className="section__lead">Candela, straight from the language's own tests.</p>
         </div>
 
         <div className="showcase">

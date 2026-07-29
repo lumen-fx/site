@@ -11,5 +11,5 @@ structural change once they are Zensical markdown.
 
 In the meantime:
 
-- [Candela documentation](../candela/) -- the scripting language Lumen uses.
-- [Lumen on GitHub](https://github.com/lumen-fx) -- source and issues.
+- [Candela documentation](../candela/): the scripting language Lumen uses.
+- [Lumen on GitHub](https://github.com/lumen-fx): source and issues.

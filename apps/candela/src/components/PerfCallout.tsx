@@ -10,7 +10,7 @@ export function PerfCallout() {
             <p className="section__lead">
               Candela compiles a program to a self-contained <code>.cdlb</code> bytecode
               artifact ahead of time. The lean <code>candela-vm</code> loads and runs that
-              bytecode with no parser or compiler on board -- the goal is to keep it under 1 MiB.
+              bytecode with no parser or compiler on board; the goal is to keep it under 1 MiB.
             </p>
             <div className="stat-row">
               <div className="stat">

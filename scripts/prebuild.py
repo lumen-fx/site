@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Assemble the docs_dir and generate the Zensical config for each Zensical target.
 
-The site has three static builds. One is Zensical -- docs (the unified docs) --
+The site has three static builds. One is Zensical, docs (the unified docs),
 and this script prepares it. The other two, the Lumen landing (apps/lumen, served
 at the apex) and the Candela landing (apps/candela), are Vite + React apps built
 with npm, not Zensical, so they are not handled here.

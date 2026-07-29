@@ -3,7 +3,7 @@
 # is kept as a reusable fragment in case another Zensical target is added later.
 #
 # This file holds the theme: palette, feature toggles, icons, social links, and
-# the Markdown extension set. It is NOT a standalone Zensical config -- it has no
+# the Markdown extension set. It is not a standalone Zensical config; it has no
 # [project] scalars, no site_url, no nav. The prebuild (scripts/prebuild.py)
 # concatenates a per-target file from config/ (which owns the [project] block:
 # site_url, docs_dir, site_dir, nav) in front of this fragment to produce the
@@ -18,7 +18,7 @@
 [project.theme]
 
 # Logos are not finalized. The header falls back to the site_name text
-# wordmark. TODO: set `logo` to a real asset once branding lands.
+# wordmark. TODO: set `logo` to a final asset once branding lands.
 favicon = "images/favicon.svg"
 language = "en"
 
