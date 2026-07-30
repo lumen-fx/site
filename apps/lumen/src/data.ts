@@ -15,7 +15,7 @@ export const INSTALL_CMD = "curl -fsSL https://lumenfx.dev/install.sh | sh";
 // The hero sample: candela on the dynamic DOM API. on_ready fires after the DOM
 // mounts; the script queries a container and builds one row per item. The render
 // preview shows the menu it produces.
-export const HERO_CDL = `import "com.lumen.cdl";
+export const HERO_CDL = `import "lumen.cdl";
 
 fn on_ready() {
     let menu = node_query("#menu");
@@ -207,7 +207,7 @@ export const SNIPPETS: Snippet[] = [
     label: "main.cdl",
     lang: "script",
     caption: "on_ready fires once the DOM mounts. Query the container, append a row per item.",
-    code: `import "com.lumen.cdl";
+    code: `import "lumen.cdl";
 
 fn on_ready() {
     let menu = node_query("#menu");
