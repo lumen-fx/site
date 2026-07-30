@@ -2,9 +2,12 @@
 # Deployed to the Cloudflare Pages project `lumenfx-docs`.
 #
 # This is the single Zensical build that carries both products' docs so search
-# is unified. The Candela docs are cloned fresh by the prebuild into
-# build/docs/docs/candela (served at /candela/). The Lumen docs are a stub at
-# /lumen/ until they migrate off mdbook.
+# is unified. The prebuild assembles build/docs/docs from the two product
+# checkouts: the Lumen docs at the tree root (served at /) and the Candela docs
+# under candela/ (served at /candela/).
+#
+# The nav below mirrors each product's own nav. When a product adds or reorders
+# pages, update the matching block here.
 #
 # This file owns the per-target [project] block; config/theme.toml is
 # concatenated after it by the prebuild.
@@ -29,7 +32,27 @@ site_dir = "dist/docs"
 extra_css = ["stylesheets/extra.css"]
 
 nav = [
-  {"Home" = "index.md"},
+  {"Introduction" = "index.md"},
+  {"Getting started" = [
+     "getting-started/install.md",
+     "getting-started/first-app.md",
+     "getting-started/project-layout.md",
+     "getting-started/templates.md",
+  ]},
+  {"Authoring" = [
+     "authoring/tags.md",
+     "authoring/css.md",
+     "authoring/rhai-builtins.md",
+     "authoring/templates.md",
+     "authoring/animations.md",
+     "authoring/lumen-toml.md",
+  ]},
+  {"Reference" = [
+     "reference/devtools.md",
+     "reference/headless.md",
+     "reference/plugins.md",
+     "reference/ffi.md",
+  ]},
   {"Candela" = [
      "candela/index.md",
      {"Language tour" = [
@@ -58,8 +81,6 @@ nav = [
         "candela/standard-library/string.md",
         "candela/standard-library/time.md",
      ]},
-  ]},
-  {"Lumen" = [
-     "lumen/index.md",
+     {"Back to the Lumen docs" = "/"},
   ]},
 ]

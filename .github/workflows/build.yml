@@ -23,6 +23,10 @@ on:
         description: "candela rev to build (branch, tag, or SHA)"
         required: false
         default: "main"
+      lumen_rev:
+        description: "lumen rev to build the docs from (branch, tag, or SHA)"
+        required: false
+        default: "main"
 
 permissions:
   contents: read
@@ -31,9 +35,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      # Default to main. A release bumps this to a pinned tag or SHA, either by
-      # editing this default or via the workflow_dispatch input above.
+      # Setting a rev makes the prebuild clone that product fresh instead of
+      # reading a local checkout. Default to main. A release bumps these to
+      # pinned tags or SHAs, either by editing the defaults or via the
+      # workflow_dispatch inputs above.
       CANDELA_REV: ${{ github.event.inputs.candela_rev || 'main' }}
+      LUMEN_REV: ${{ github.event.inputs.lumen_rev || 'main' }}
     steps:
       - name: Checkout site
         uses: actions/checkout@v4
@@ -53,8 +60,8 @@ jobs:
       - name: Sync dependencies
         run: uv sync
 
-      # Only docs is Zensical now. prebuild assembles its docs_dir (cloning the
-      # candela docs fresh) and generates its config.
+      # Only docs is Zensical. prebuild assembles its docs_dir by cloning both
+      # product doc sets fresh, and generates its config.
       - name: Assemble docs (clone product docs fresh)
         run: uv run python scripts/prebuild.py
 

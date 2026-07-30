@@ -5,7 +5,7 @@ Source for the Lumen and Candela websites.
 - `apps/lumen/` builds the Lumen landing at `lumenfx.dev`.
 - `apps/candela/` builds the Candela landing at `candela.lumenfx.dev`.
 - The docs build puts the Lumen and Candela docs under one search at
-  `docs.lumenfx.dev`.
+  `docs.lumenfx.dev`: Lumen at the root, Candela under `/candela/`.
 
 The landings are React (Vite, TypeScript, Bootstrap). The docs use
 [Zensical](https://zensical.org). Everything builds to static files.
@@ -26,9 +26,11 @@ Work on one landing with hot reload:
 npm --prefix apps/lumen install && npm --prefix apps/lumen run dev
 ```
 
-The Candela docs and the `install.sh` on the Candela landing are pulled from the
-[candela repo](https://github.com/lumen-fx/candela) at build time, so they are
-not committed here. `CANDELA_REV` picks the revision to pull (default `main`).
+Both doc sets live in their product repos, not here. A local build reads them
+from checkouts on disk; setting `LUMEN_REV` or `CANDELA_REV` pulls that product
+fresh from its repo instead, which is what CI does. `scripts/prebuild.py` lists
+the variables that point at other sources. The `install.sh` on the Candela
+landing is fetched from the candela repo the same way.
 
 ## Deploy
 
@@ -38,6 +40,5 @@ Cloudflare dashboard.
 
 ## Notes
 
-The Lumen docs are still an mdBook, so the `/lumen/` section on the docs site is
-a stub. The logo marks are placeholders. The per-target build steps live in
-`scripts/` and `.github/workflows/build.yml`.
+The logo marks are placeholders. The per-target build steps live in `scripts/`
+and `.github/workflows/build.yml`.

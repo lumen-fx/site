@@ -1,35 +1,38 @@
 #!/usr/bin/env python3
 """Assemble the docs_dir and generate the Zensical config for each Zensical target.
 
-The site has three static builds. One is Zensical, docs (the unified docs),
-and this script prepares it. The other two, the Lumen landing (apps/lumen, served
-at the apex) and the Candela landing (apps/candela), are Vite + React apps built
+The site has three static builds. One is Zensical, docs (the unified docs), and
+this script prepares it. The other two, the Lumen landing (apps/lumen, served at
+the apex) and the Candela landing (apps/candela), are Vite + React apps built
 with npm, not Zensical, so they are not handled here.
 
-Each Zensical target has its own docs_dir (site source) and its own generated
-config. Product docs are fetched fresh from each product repo at build time and
-are never committed to this repo. Run this before `zensical build`.
+The docs target carries both products under one search: the Lumen docs at the
+site root and the Candela docs at /candela/. Product docs come from outside this
+repo and are never committed here.
 
 For each target this script:
 
   1. Assembles build/<target>/docs (the Zensical docs_dir) from:
        * content/shared/    theme assets (stylesheets, favicon), copied to
                             every target.
-       * content/<target>/  the target's own pages (landing or docs home,
-                            stubs), copied verbatim.
-       * cloned product docs (docs target only) copied to a subpath.
+       * content/<target>/  the target's own pages, if it has any.
+       * each product's docs, copied to its subpath in the tree.
   2. Writes zensical.<target>.toml at the repo root by concatenating the
      target's [project] block (config/<target>.toml) in front of the shared
      theme (config/theme.toml). The config is written at the repo root so
      Zensical resolves docs_dir and site_dir relative to the repo root.
 
-Adding Lumen docs later is a one-line change: add a clone entry to the docs
-target's "clones" list once the Lumen docs are Zensical markdown (they are an
-mdbook today).
+Product docs resolve one of two ways. By default each product is read from a
+local checkout, which is what you want when you edit the docs and the site side
+by side. Setting either the repo or the rev variable for a product switches it
+to a fresh shallow clone, which is what CI does.
 
-Environment overrides:
-  CANDELA_REPO   git URL for candela        (default: the public GitHub repo)
-  CANDELA_REV    branch, tag, or commit SHA (default: main)
+Environment overrides, per product (LUMEN and CANDELA):
+  <PRODUCT>_DOCS_SRC   local path to the docs project (the directory holding
+                       docs/); used when neither variable below is set
+  <PRODUCT>_REPO       git URL to clone instead of reading the local path
+  <PRODUCT>_REV        branch, tag, or commit SHA to clone (default: main);
+                       setting this alone clones the product's public repo
 """
 
 from __future__ import annotations
@@ -48,20 +51,26 @@ THEME_FRAGMENT = CONFIG / "theme.toml"
 BUILD = ROOT / "build"
 REPOS = BUILD / "repos"
 
+def _source(name: str, default_src: str, default_repo: str, dest_subdir: str) -> dict:
+    """Describe where one product's markdown comes from and where it lands.
 
-# A clone entry pulls a product repo at a rev and copies a subdirectory of
-# markdown into the target's docs_dir. This is how the docs target picks up the
-# Candela docs. To add Lumen once its docs are Zensical markdown, append an
-# entry to the docs target's "clones" and add the nav in config/docs.toml.
-def _candela_clone() -> dict:
+    src_subdir is the path inside the product's docs project that holds the
+    markdown; both products keep it at docs/. dest_subdir is the path inside the
+    assembled docs_dir, so "." serves the product at the site root.
+    """
+    key = name.upper()
+    repo = os.environ.get(f"{key}_REPO")
+    rev = os.environ.get(f"{key}_REV")
     return {
-        "name": "candela",
-        "repo": os.environ.get("CANDELA_REPO", "https://github.com/lumen-fx/candela"),
-        "rev": os.environ.get("CANDELA_REV", "main"),
-        # Subpath of the cloned repo that holds the markdown docs.
-        "src_subdir": Path("docs") / "docs",
-        # Destination under the target's docs_dir (served at /candela/).
-        "dest_subdir": Path("candela"),
+        "name": name,
+        "src": Path(os.environ.get(f"{key}_DOCS_SRC", default_src)),
+        # A repo or a rev in the environment means "clone this fresh"; with
+        # neither, the local checkout wins.
+        "clone": bool(repo or rev),
+        "repo": repo or default_repo,
+        "rev": rev or "main",
+        "src_subdir": Path("docs"),
+        "dest_subdir": Path(dest_subdir),
     }
 
 
@@ -73,16 +82,19 @@ TARGETS = [
         # Unified docs at the root of docs.lumenfx.dev.
         "name": "docs",
         "content_dir": CONTENT / "docs",
-        "clones": [
-            _candela_clone(),
-            # When the Lumen docs move to Zensical, add:
-            # {
-            #     "name": "lumen",
-            #     "repo": os.environ.get("LUMEN_REPO", "https://github.com/lumen-fx/lumen"),
-            #     "rev": os.environ.get("LUMEN_REV", "main"),
-            #     "src_subdir": Path("docs"),
-            #     "dest_subdir": Path("lumen"),
-            # },
+        "sources": [
+            _source(
+                "lumen",
+                "/home/artur/lumen-docs-zensical/docs",
+                "https://github.com/lumen-fx/lumen",
+                ".",
+            ),
+            _source(
+                "candela",
+                "/home/artur/keel-work/docs",
+                "https://github.com/lumen-fx/candela",
+                "candela",
+            ),
         ],
     },
 ]
@@ -102,6 +114,26 @@ def clone(repo: str, rev: str, dest: Path) -> None:
     run(["git", "-C", dest, "remote", "add", "origin", repo])
     run(["git", "-C", dest, "fetch", "-q", "--depth", "1", "origin", rev])
     run(["git", "-C", dest, "checkout", "-q", "FETCH_HEAD"])
+
+
+def resolve_source(target: str, src: dict) -> tuple[Path, str]:
+    """Return the docs project root for a product, plus a label for the log.
+
+    Both products keep their docs project in a top-level docs/ directory, so a
+    clone of the product repo is one level above the project root.
+    """
+    key = src["name"].upper()
+    if src["clone"]:
+        dest = REPOS / f"{target}-{src['name']}"
+        clone(src["repo"], src["rev"], dest)
+        return dest / "docs", f"{src['repo']} @ {src['rev']}"
+    path = src["src"]
+    if not path.is_dir():
+        sys.exit(
+            f"error: {src['name']} docs not found at {path}. Point "
+            f"{key}_DOCS_SRC at a local checkout, or set {key}_REPO to clone it."
+        )
+    return path, str(path)
 
 
 def generate_config(target: str) -> Path:
@@ -134,32 +166,32 @@ def assemble_target(target: dict) -> None:
     docs_out.mkdir(parents=True)
 
     # Shared theme assets first (stylesheets, favicon), then the target's own
-    # pages on top.
+    # pages, then the product docs on top.
     if not SHARED.is_dir():
         sys.exit(f"error: missing shared assets directory: {SHARED}")
     shutil.copytree(SHARED, docs_out, dirs_exist_ok=True)
+    seeded = [SHARED]
 
-    content_dir = target["content_dir"]
-    if not content_dir.is_dir():
-        sys.exit(f"error: missing content directory: {content_dir}")
-    shutil.copytree(content_dir, docs_out, dirs_exist_ok=True)
+    content_dir = target.get("content_dir")
+    if content_dir and content_dir.is_dir():
+        shutil.copytree(content_dir, docs_out, dirs_exist_ok=True)
+        seeded.append(content_dir)
     print(
         f"[{name}] seeded docs_dir from "
-        f"{SHARED.relative_to(ROOT)} + {content_dir.relative_to(ROOT)}",
+        + " + ".join(str(p.relative_to(ROOT)) for p in seeded),
         flush=True,
     )
 
-    for src in target["clones"]:
-        clone_dest = REPOS / f"{name}-{src['name']}"
-        clone(src["repo"], src["rev"], clone_dest)
-        md_src = clone_dest / src["src_subdir"]
+    for src in target["sources"]:
+        project_root, label = resolve_source(name, src)
+        md_src = project_root / src["src_subdir"]
         if not md_src.is_dir():
-            sys.exit(f"error: {src['name']} docs not found at {md_src}")
+            sys.exit(f"error: {src['name']} markdown not found at {md_src}")
         md_dest = docs_out / src["dest_subdir"]
         shutil.copytree(md_src, md_dest, dirs_exist_ok=True)
         print(
-            f"[{name}] copied {src['name']} docs @ {src['rev']} "
-            f"-> {md_dest.relative_to(ROOT)}",
+            f"[{name}] copied {src['name']} docs from {label} -> "
+            f"{md_dest.resolve().relative_to(ROOT)}",
             flush=True,
         )
 
