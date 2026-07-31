@@ -30,6 +30,11 @@ The Candela docs and the `install.sh` on the Candela landing are pulled from the
 [candela repo](https://github.com/lumen-fx/candela) at build time, so they are
 not committed here. `CANDELA_REV` picks the revision to pull (default `main`).
 
+The Lumen installer behind `curl -fsSL https://lumenfx.dev/install.sh | sh` is
+committed here, in `apps/lumen/public/`, along with the release manifest it
+reads from `/install/manifest.json`. Cutting a Lumen release means updating that
+manifest; the steps are in the release checklist in the lumen repo.
+
 ## Deploy
 
 Pushing to `main` builds all three sites and deploys them to Cloudflare Pages.
