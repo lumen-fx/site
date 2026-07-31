@@ -85,7 +85,7 @@ TARGETS = [
         "sources": [
             _source(
                 "lumen",
-                "/home/artur/lumen-docs-zensical/docs",
+                "/home/artur/Lumen/docs",
                 "https://github.com/lumen-fx/lumen",
                 ".",
             ),
