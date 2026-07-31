@@ -1,0 +1,25 @@
+name: feature request
+description: propose a change to the site
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: problem
+      description: what you came to the site for and could not find or do
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: proposed behavior
+      description: what the site should show or do instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: alternatives
+      description: other ways to solve it, and why they fall short

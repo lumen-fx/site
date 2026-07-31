@@ -1,0 +1,33 @@
+name: bug report
+description: something on lumenfx.dev is broken or wrong
+labels: [bug]
+body:
+  - type: input
+    id: url
+    attributes:
+      label: page url
+      placeholder: https://docs.lumenfx.dev/getting-started/
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: what is broken
+      description: what you saw, and what you expected instead
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: browser and version
+      placeholder: Firefox 140, Safari 18.3 on iOS
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: screenshot
+      description: drag an image in, if it helps
