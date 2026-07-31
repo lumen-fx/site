@@ -32,6 +32,11 @@ fresh from its repo instead, which is what CI does. `scripts/prebuild.py` lists
 the variables that point at other sources. The `install.sh` on the Candela
 landing is fetched from the candela repo the same way.
 
+The Lumen installer behind `curl -fsSL https://lumenfx.dev/install.sh | sh` is
+committed here, in `apps/lumen/public/`, along with the release manifest it
+reads from `/install/manifest.json`. Cutting a Lumen release means updating that
+manifest; the steps are in the release checklist in the lumen repo.
+
 ## Deploy
 
 Pushing to `main` builds all three sites and deploys them to Cloudflare Pages.

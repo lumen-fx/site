@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "channel": "alpha",
+  "version": "0.1.0",
+  "generated": "2026-07-30T00:00:00Z",
+  "base_url": "https://dl.lumenfx.dev",
+  "components": {
+    "lumen": {
+      "description": "lumenc and the liblumen runtime library",
+      "default": true,
+      "targets": {
+        "linux-x86_64": {
+          "version": "0.1.0",
+          "url": "https://dl.lumenfx.dev/lumen/0.1.0/lumen-0.1.0-linux-x86_64.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size": 0,
+          "format": "tar.gz"
+        },
+        "linux-aarch64": {
+          "version": "0.1.0",
+          "url": "https://dl.lumenfx.dev/lumen/0.1.0/lumen-0.1.0-linux-aarch64.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size": 0,
+          "format": "tar.gz"
+        },
+        "macos-x86_64": {
+          "version": "0.1.0",
+          "url": "https://dl.lumenfx.dev/lumen/0.1.0/lumen-0.1.0-macos-x86_64.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size": 0,
+          "format": "tar.gz"
+        },
+        "macos-aarch64": {
+          "version": "0.1.0",
+          "url": "https://dl.lumenfx.dev/lumen/0.1.0/lumen-0.1.0-macos-aarch64.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size": 0,
+          "format": "tar.gz"
+        },
+        "windows-x86_64": {
+          "version": "0.1.0",
+          "url": "https://dl.lumenfx.dev/lumen/0.1.0/lumen-0.1.0-windows-x86_64.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size": 0,
+          "format": "zip"
+        }
+      }
+    },
+    "candela": {
+      "description": "The standalone candela toolchain: candela and candela-vm",
+      "default": false,
+      "targets": {
+        "linux-x86_64": {
+          "version": "0.1.0",
+          "url": "https://dl.lumenfx.dev/candela/0.1.0/candela-0.1.0-linux-x86_64.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size": 0,
+          "format": "tar.gz"
+        },
+        "linux-aarch64": {
+          "version": "0.1.0",
+          "url": "https://dl.lumenfx.dev/candela/0.1.0/candela-0.1.0-linux-aarch64.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size": 0,
+          "format": "tar.gz"
+        },
+        "macos-x86_64": {
+          "version": "0.1.0",
+          "url": "https://dl.lumenfx.dev/candela/0.1.0/candela-0.1.0-macos-x86_64.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size": 0,
+          "format": "tar.gz"
+        },
+        "macos-aarch64": {
+          "version": "0.1.0",
+          "url": "https://dl.lumenfx.dev/candela/0.1.0/candela-0.1.0-macos-aarch64.tar.gz",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size": 0,
+          "format": "tar.gz"
+        },
+        "windows-x86_64": {
+          "version": "0.1.0",
+          "url": "https://dl.lumenfx.dev/candela/0.1.0/candela-0.1.0-windows-x86_64.zip",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "size": 0,
+          "format": "zip"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lumenfx.dev/install/manifest.schema.json",
+  "title": "Lumen release manifest",
+  "description": "What install.sh and the lumenc/candela self-updaters read to find, verify, and unpack a release. Generated at release time by tools/make-manifest.sh in the lumen repo. manifest.json is the current release; every release also stays available as manifest-<version>.json beside it, which is what install.sh --version fetches.",
+  "type": "object",
+  "required": ["schema_version", "channel", "version", "base_url", "components"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "description": "Manifest format. An installer refuses a manifest it does not understand.",
+      "type": "integer",
+      "const": 1
+    },
+    "channel": {
+      "description": "Release channel this manifest publishes.",
+      "type": "string",
+      "enum": ["alpha", "beta", "stable"]
+    },
+    "version": {
+      "description": "Release version the manifest describes.",
+      "type": "string"
+    },
+    "generated": {
+      "description": "When the manifest was built, in UTC.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "base_url": {
+      "description": "Host every download URL starts with. Installers rewrite this prefix when pointed at a mirror.",
+      "type": "string",
+      "format": "uri"
+    },
+    "components": {
+      "description": "Separately installable pieces of the toolchain, keyed by the name used in the --components spec.",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/component" }
+    }
+  },
+  "$defs": {
+    "component": {
+      "type": "object",
+      "required": ["default", "targets"],
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "description": "One line shown in the installer prompt.",
+          "type": "string"
+        },
+        "default": {
+          "description": "Whether a plain install includes this component.",
+          "type": "boolean"
+        },
+        "targets": {
+          "description": "Builds keyed by <os>-<arch>.",
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "linux-x86_64",
+              "linux-aarch64",
+              "macos-x86_64",
+              "macos-aarch64",
+              "windows-x86_64",
+              "windows-aarch64"
+            ]
+          },
+          "additionalProperties": { "$ref": "#/$defs/artifact" }
+        }
+      }
+    },
+    "artifact": {
+      "description": "One archive. It holds the tree to install: executables in bin/, libraries in lib/.",
+      "type": "object",
+      "required": ["version", "url", "sha256", "size", "format"],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "description": "Version of this component, which can trail the release version.",
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "sha256": {
+          "description": "Digest of the archive. Installers verify it before unpacking.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "size": {
+          "description": "Archive size in bytes, shown in the installer prompt.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "format": {
+          "type": "string",
+          "enum": ["tar.gz", "zip", "msi"]
+        }
+      }
+    }
+  }
+}
