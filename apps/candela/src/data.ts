@@ -10,6 +10,9 @@ export const KEEL_URL = "https://github.com/horacehoff/keel";
 // install.sh is served from this site's own root (see the CI packaging step).
 export const INSTALL_CMD = "curl -fsSL https://candela.lumenfx.dev/install.sh | sh";
 
+// The Windows installer, attached to every release.
+export const MSI_URL = "https://github.com/lumen-fx/candela/releases/latest/download/candela-x86_64-windows.msi";
+
 // The hero sample: structs, methods via impl blocks, and left-to-right method
 // chaining. Verified against docs/docs/language-tour/data-types.md.
 export const HERO_CODE = `struct Point { x: int, y: int }

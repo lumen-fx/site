@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CodeBlock } from "./CodeBlock";
-import { DOCS_URL, HERO_CODE, INSTALL_CMD, REPO_URL, RELEASES_URL } from "../data";
+import { DOCS_URL, HERO_CODE, INSTALL_CMD, REPO_URL, MSI_URL } from "../data";
 
 export function Hero() {
   const [copied, setCopied] = useState(false);
@@ -50,8 +50,9 @@ export function Hero() {
               </button>
             </div>
             <p className="install__note">
-              macOS and Linux. On Windows, grab a build from the{" "}
-              <a href={RELEASES_URL}>latest release</a>.
+              macOS and Linux. On Windows,{" "}
+              <a href={MSI_URL}>download the installer (.msi)</a>. It is not signed yet, so Windows
+              may warn before it runs.
             </p>
           </div>
 
