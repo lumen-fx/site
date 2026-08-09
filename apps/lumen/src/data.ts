@@ -12,6 +12,9 @@ export const BENCH_URL = "https://github.com/lumen-fx/lumen-benchmarks";
 // The documented one-line install for the prebuilt toolchain.
 export const INSTALL_CMD = "curl -fsSL https://lumenfx.dev/install.sh | sh";
 
+// The Windows installer, attached to every release.
+export const MSI_URL = "https://github.com/lumen-fx/lumen/releases/latest/download/lumen-windows-x86_64.msi";
+
 // The hero sample: candela on the dynamic DOM API. on_ready fires after the DOM
 // mounts; the script queries a container and builds one row per item. The render
 // preview shows the menu it produces.

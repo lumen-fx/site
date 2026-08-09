@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { CodeBlock } from "./CodeBlock";
-import { FRAME, DOCS_URL, HERO_CDL, INSTALL_CMD, REPO_URL, RELEASES_URL } from "../data";
+import { FRAME, DOCS_URL, HERO_CDL, INSTALL_CMD, REPO_URL, MSI_URL } from "../data";
 
 // Readouts are qualitative posture, not drifting figures. The measured numbers
 // live in the benchmarks panel below, where they are sourced and reproducible.
@@ -81,8 +81,9 @@ export function Hero() {
               </button>
             </div>
             <p className="install__note">
-              macOS and Linux install the prebuilt toolchain. On Windows, grab a build from the{" "}
-              <a href={RELEASES_URL}>latest release</a>.
+              macOS and Linux install the prebuilt toolchain. On Windows,{" "}
+              <a href={MSI_URL} download>download the installer (.msi)</a>. It is not signed yet, so Windows
+              may warn before it runs.
             </p>
 
             <div className="hero__readouts">
