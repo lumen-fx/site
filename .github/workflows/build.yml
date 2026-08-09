@@ -17,6 +17,14 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Product repos (lumen, candela) send this from their own CI when their
+  # main changes, so docs and install.sh redeploy without a manual dispatch.
+  repository_dispatch:
+    types: [product-updated]
+  # Daily fallback for a missed dispatch or a product repo whose sender is
+  # not set up yet.
+  schedule:
+    - cron: "17 4 * * *"
   workflow_dispatch:
     inputs:
       candela_rev:
@@ -68,7 +76,12 @@ jobs:
       - name: Build docs (zensical)
         run: uv run zensical build --strict -f zensical.docs.toml
 
-      # The Lumen landing is a static Vite + React app; build it to dist/apex.
+      # The Lumen landing is a static Vite + React app. Fetch install.sh fresh
+      # from the lumen repo so it ships at lumenfx.dev/install.sh, then build
+      # to dist/apex.
+      - name: Package lumen install.sh
+        run: uv run python scripts/fetch_lumen_install.py
+
       - name: Install lumen landing deps
         run: npm --prefix apps/lumen ci
 
