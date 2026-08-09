@@ -11,6 +11,8 @@ node_modules/
 *.tsbuildinfo
 # install.sh is fetched fresh from the candela repo, never committed
 /apps/candela/public/install.sh
+# install.sh is fetched fresh from the lumen repo, never committed
+/apps/lumen/public/install.sh
 
 # Zensical static output
 /dist/

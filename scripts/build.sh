@@ -4,7 +4,7 @@
 # The docs target is Zensical: assemble its docs_dir from the Lumen and Candela
 # docs, generate its config, then run Zensical. The Lumen landing (apps/lumen,
 # served at the apex) and the Candela landing (apps/candela) are Vite + React
-# apps; the Candela one also fetches install.sh fresh from the candela repo
+# apps; each also fetches its install.sh fresh from its own product repo
 # before `vite build`. Every target lands in dist/<target>/, matching the CI
 # workflow.
 #
@@ -14,6 +14,7 @@
 #
 #   scripts/build.sh                      # local product checkouts, install.sh from main
 #   LUMEN_DOCS_SRC=~/lumen/docs scripts/build.sh   # point the Lumen docs elsewhere
+#   LUMEN_REV=v0.2.0 scripts/build.sh     # pin the lumen docs + install.sh to a tag/SHA
 #   CANDELA_REV=v0.2.0 scripts/build.sh   # pin the candela docs + install.sh to a tag/SHA
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -26,6 +27,7 @@ uv run zensical build --strict -f zensical.docs.toml
 
 # --- Lumen landing (Vite + React) -> dist/apex ---
 echo "== building apex / lumen (vite + react) =="
+uv run python scripts/fetch_lumen_install.py
 npm --prefix apps/lumen ci
 npm --prefix apps/lumen run build
 

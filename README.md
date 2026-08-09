@@ -29,13 +29,14 @@ npm --prefix apps/lumen install && npm --prefix apps/lumen run dev
 Both doc sets live in their product repos, not here. A local build reads them
 from checkouts on disk; setting `LUMEN_REV` or `CANDELA_REV` pulls that product
 fresh from its repo instead, which is what CI does. `scripts/prebuild.py` lists
-the variables that point at other sources. The `install.sh` on the Candela
-landing is fetched from the candela repo the same way.
+the variables that point at other sources. `install.sh` on both the Lumen and
+Candela landings is fetched fresh from the matching product repo the same way
+and is never committed here.
 
-The Lumen installer behind `curl -fsSL https://lumenfx.dev/install.sh | sh` is
-committed here, in `apps/lumen/public/`, along with the release manifest it
-reads from `/install/manifest.json`. Cutting a Lumen release means updating that
-manifest; the steps are in the release checklist in the lumen repo.
+The Lumen installer behind `curl -fsSL https://lumenfx.dev/install.sh | sh`
+queries the GitHub Releases API for `lumen-fx/lumen` directly; there is
+nothing about a release to keep in sync here. Cutting a Lumen release is
+described in the release checklist in the lumen repo.
 
 ## Deploy
 

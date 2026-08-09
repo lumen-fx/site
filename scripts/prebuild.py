@@ -106,14 +106,20 @@ def run(cmd: list, **kw) -> None:
 
 
 def clone(repo: str, rev: str, dest: Path) -> None:
-    """Fetch a single rev (branch, tag, or SHA) shallowly into dest."""
+    """Fetch a single rev (branch, tag, or SHA) shallowly into dest.
+
+    LFS smudge is skipped: the docs build reads markdown and config, never a
+    product's binary assets, so pointer files are fine and the build does not
+    depend on the product's LFS storage being reachable.
+    """
     if dest.exists():
         shutil.rmtree(dest)
     dest.mkdir(parents=True)
+    env = dict(os.environ, GIT_LFS_SKIP_SMUDGE="1")
     run(["git", "init", "-q", dest])
     run(["git", "-C", dest, "remote", "add", "origin", repo])
-    run(["git", "-C", dest, "fetch", "-q", "--depth", "1", "origin", rev])
-    run(["git", "-C", dest, "checkout", "-q", "FETCH_HEAD"])
+    run(["git", "-C", dest, "fetch", "-q", "--depth", "1", "origin", rev], env=env)
+    run(["git", "-C", dest, "checkout", "-q", "FETCH_HEAD"], env=env)
 
 
 def resolve_source(target: str, src: dict) -> tuple[Path, str]:
