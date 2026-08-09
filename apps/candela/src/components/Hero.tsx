@@ -51,7 +51,7 @@ export function Hero() {
             </div>
             <p className="install__note">
               macOS and Linux. On Windows,{" "}
-              <a href={MSI_URL}>download the installer (.msi)</a>. It is not signed yet, so Windows
+              <a href={MSI_URL} download>download the installer (.msi)</a>. It is not signed yet, so Windows
               may warn before it runs.
             </p>
           </div>
