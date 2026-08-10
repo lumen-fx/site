@@ -1,6 +1,8 @@
 // Landing content. Every feature and code sample here is checked against the
-// candela repository (README, BENCHMARKS.md, docs/docs, libs/std tests) so the
-// page does not claim anything the language does not ship.
+// candela repository (README, BENCHMARKS.md, docs, libs/std) so the page does
+// not claim anything the language does not ship. Samples whose source is a
+// file in that repo are fetched at build time; see scripts/fetch_examples.py.
+import { LIST_HOF } from "./generated/examples";
 
 export const REPO_URL = "https://github.com/lumen-fx/candela";
 export const DOCS_URL = "https://docs.lumenfx.dev/candela/";
@@ -14,7 +16,9 @@ export const INSTALL_CMD = "curl -fsSL https://candela.lumenfx.dev/install.sh | 
 export const MSI_URL = "https://github.com/lumen-fx/candela/releases/latest/download/candela-x86_64-windows.msi";
 
 // The hero sample: structs, methods via impl blocks, and left-to-right method
-// chaining. Verified against docs/docs/language-tour/data-types.md.
+// chaining. No file in the repo shows all three at hero length, so this one is
+// hand-kept; its forms are checked against libs/std/option.cdl (impl blocks)
+// and examples/binary-trees/binary-trees.cdl (typed struct fields, literals).
 export const HERO_CODE = `struct Point { x: int, y: int }
 
 impl Point {
@@ -91,56 +95,41 @@ export interface Snippet {
   code: string;
 }
 
-// Each snippet is adapted from verified sources in the candela repo: the enum
-// example from tests/cdlb_roundtrip.rs, the higher-order pipeline from
-// libs/std/tests/test_list_hof.cdl, and the JSON example from
-// libs/std/tests/test_json.cdl.
 export const SNIPPETS: Snippet[] = [
   {
     id: "enums",
     label: "Enums + match",
     caption: "Payload-carrying variants, matched with binding patterns.",
+    // The program compiled by the enum round-trip test. It lives as a Rust
+    // string constant, so it is kept in step by hand rather than fetched.
+    // Source of truth: tests/cdlb_roundtrip.rs (enum_values_roundtrip_through_cdlb).
     code: `enum Shape { Circle(int), Rect(int, int), Unit }
 
-fn area(s) {
+fn main() {
+    let s = Shape::Rect(6, 7);
     let a = 0;
     match s {
-        Circle(r) => { a = r * r * 3; }
+        Circle(r) => { a = r; }
         Rect(w, h) => { a = w * h; }
-        Unit => { a = 0; }
+        Unit => { a = -1; }
     }
-    return a;
-}
-
-fn main() {
-    print(area(Shape::Rect(6, 7)));  // 42
-    print(area(Shape::Circle(3)));   // 27
+    print(a);
 }`,
   },
   {
     id: "hof",
     label: "Higher-order pipeline",
-    caption: "Named and anonymous functions passed to list helpers.",
-    code: `import std::list;
-
-fn is_even(x) { return x % 2 == 0; }
-
-fn main() {
-    let xs = [1, 2, 3, 4, 5, 6];
-
-    let evens = list::filter(xs, is_even);
-    let squared = list::map(evens, fn(x) { return x * x; });
-    let total = list::reduce(squared, 0, fn(a, b) { return a + b; });
-
-    print(squared);  // [4, 16, 36]
-    print(total);    // 56
-}`,
+    caption: "Named and anonymous functions passed to list helpers, with each result checked.",
+    // libs/std/tests/test_list_hof.cdl, fetched at build time.
+    code: LIST_HOF,
   },
   {
     id: "json",
     label: "Parse JSON",
     caption: "Parse a document and read typed values back out.",
-    code: `import std::json;
+    // Trimmed from libs/std/tests/test_json.cdl, which runs to seventy lines of
+    // checks. Kept in step by hand; the full file is the source of truth.
+    code: `import "std/json" as json;
 
 fn main() {
     let doc = json::parse("{\\"name\\": \\"candela\\", \\"nums\\": [1, 2, 3]}");
