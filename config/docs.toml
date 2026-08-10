@@ -6,8 +6,8 @@
 # checkouts: the Lumen docs at the tree root (served at /) and the Candela docs
 # under candela/ (served at /candela/).
 #
-# The nav below mirrors each product's own nav. When a product adds or reorders
-# pages, update the matching block here.
+# The nav is not written here: the prebuild generates it from each product's
+# own docs/zensical.toml, so it follows the products and cannot go stale.
 #
 # This file owns the per-target [project] block; config/theme.toml is
 # concatenated after it by the prebuild.
@@ -31,56 +31,3 @@ site_dir = "dist/docs"
 
 extra_css = ["stylesheets/extra.css"]
 
-nav = [
-  {"Introduction" = "index.md"},
-  {"Getting started" = [
-     "getting-started/install.md",
-     "getting-started/first-app.md",
-     "getting-started/project-layout.md",
-     "getting-started/templates.md",
-  ]},
-  {"Authoring" = [
-     "authoring/tags.md",
-     "authoring/css.md",
-     "authoring/rhai-builtins.md",
-     "authoring/templates.md",
-     "authoring/animations.md",
-     "authoring/lumen-toml.md",
-  ]},
-  {"Reference" = [
-     "reference/devtools.md",
-     "reference/headless.md",
-     "reference/plugins.md",
-     "reference/ffi.md",
-  ]},
-  {"Candela" = [
-     "candela/index.md",
-     {"Language tour" = [
-        "candela/language-tour/hello-world.md",
-        "candela/language-tour/variables.md",
-        "candela/language-tour/data-types.md",
-        "candela/language-tour/functions.md",
-        "candela/language-tour/control-flow.md",
-        "candela/language-tour/error-handling.md",
-        "candela/language-tour/modules.md",
-        "candela/language-tour/dynamic-libraries.md",
-        "candela/language-tour/embedding.md",
-     ]},
-     {"Reference" = [
-        "candela/reference/operators.md",
-        "candela/reference/errors.md",
-     ]},
-     {"Standard library" = [
-        "candela/standard-library/built-in-functions.md",
-        "candela/standard-library/assert.md",
-        "candela/standard-library/convert.md",
-        "candela/standard-library/fs.md",
-        "candela/standard-library/list.md",
-        "candela/standard-library/math.md",
-        "candela/standard-library/random.md",
-        "candela/standard-library/string.md",
-        "candela/standard-library/time.md",
-     ]},
-     {"Back to the Lumen docs" = "/"},
-  ]},
-]
