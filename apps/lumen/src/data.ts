@@ -1,6 +1,7 @@
 // Landing content for the Lumen framework. Messaging is drawn from the Lumen
 // site source material and kept to what the framework does today.
 import type { Lang } from "./lib/highlight";
+import { CPP_SDK, PYTHON_SDK, RUST_SDK } from "./generated/examples";
 
 export const REPO_URL = "https://github.com/lumen-fx/lumen";
 export const DOCS_URL = "https://docs.lumenfx.dev/";
@@ -15,28 +16,30 @@ export const INSTALL_CMD = "curl -fsSL https://lumenfx.dev/install.sh | sh";
 // The Windows installer, attached to every release.
 export const MSI_URL = "https://github.com/lumen-fx/lumen/releases/latest/download/lumen-windows-x86_64.msi";
 
-// The hero sample: candela on the dynamic DOM API. on_ready fires after the DOM
-// mounts; the script queries a container and builds one row per item. The render
-// preview shows the menu it produces.
+// The hero sample and the three showcase files below are the `counter`
+// template verbatim, so what the page shows is what `lumenc new app counter`
+// writes to disk. The templates live as Rust string constants rather than as
+// files, so they cannot be fetched at build time like the other examples.
+// Source of truth: lumenc/src/scaffold.rs (the COUNTER constant).
 export const HERO_CDL = `import "lumen.cdl";
 
 fn on_ready() {
-    let menu = node_query("#menu");
-    for item in ["Account", "Display", "Privacy"] {
-        lm_append(menu, "row", "item", item);
-    }
-}`;
+    lumen::signal_set_int("clicks", 0);
 
-// The container the script fills. The rows are not hand-written: candela spawns
-// them from the data.
-export const HERO_LMN = `<root padding="22" gap="12">
-  <label class="title" text="Settings" />
-  <column id="menu" gap="8" />
-  <script src="main.cdl" />
-</root>`;
+    get_by_id("bump").on("click", "on_bump");
+    get_by_id("reset").on("click", "on_reset");
+}
 
-// The rows the render preview shows, built by the candela snippet above.
-export const MENU_ROWS = ["Account", "Display", "Privacy"];
+fn on_bump(ev) {
+    let n = lumen::signal_get_int("clicks");
+    lumen::signal_set_int("clicks", n + 1);
+}
+
+fn on_reset(ev) {
+    lumen::signal_set_int("clicks", 0);
+}
+
+fn main() {}`;
 
 export interface Feature {
   tag: string;
@@ -78,7 +81,7 @@ export const FEATURES: Feature[] = [
   {
     tag: "ffi + sdks",
     title: "Drive it from your language",
-    body: "Own the state and event handlers from Rust, C++, or Python instead. The lumenui package and a C ABI put typed signals and native handlers in your host.",
+    body: "Own the state and event handlers from Rust, C++, or Python instead. A C ABI and a shipped SDK per language put typed signals and native handlers in your host.",
   },
   {
     tag: "a11y + ime",
@@ -95,13 +98,13 @@ export const SHIPPING: string[] = [
   "candela, lua, and rhai script hosts",
   "C ABI with Rust, C++, and Python SDKs",
   "Accessibility tree, IME, and Unicode BiDi",
-  "Plugin registry via lumenc add",
   "Light and dark via prefers-color-scheme",
   "Virtualized lists and long content",
 ];
 
 export const PLANNED: string[] = [
   "Web target: the same source to a real DOM",
+  "Plugin dependencies declared in lumen.toml",
   "Multi-window apps",
   "Keyframe and spring animation",
   "Built-in in-window devtools",
@@ -117,47 +120,29 @@ export interface Sdk {
   code: string;
 }
 
+// Each sample is the quick start from the SDK's own source, fetched at build
+// time; see scripts/fetch_examples.py.
 export const SDKS: Sdk[] = [
   {
     name: "Rust",
-    install: "cargo add lumenui",
-    blurb: "Typed signals and native handlers from Rust, no script host in between.",
+    install: "cargo add lumen",
+    blurb: "The builder surface: markup, properties, and click handlers in one chain.",
     lang: "script",
-    code: `use lumenui::App;
-
-fn main() {
-    App::new("app/main.lmn")
-        .on("save", |ui| ui.signal("count").add(1))
-        .run();
-}`,
+    code: RUST_SDK,
   },
   {
     name: "Python",
     install: "pip install lumenui",
-    blurb: "Bind signals and handlers from Python; the runtime stays native.",
+    blurb: "Declare a model and every field becomes a signal. Imported as lumen.",
     lang: "script",
-    code: `import lumenui
-
-app = lumenui.App("app/main.lmn")
-
-@app.on("save")
-def save(ui):
-    ui.signal("count").add(1)
-
-app.run()`,
+    code: PYTHON_SDK,
   },
   {
-    name: "C / C++",
-    install: "#include <lumen.h>",
-    blurb: "The C ABI with shipped headers. Drive the window from C or C++.",
+    name: "C++",
+    install: "#include <lumen.hpp>",
+    blurb: "Typed signals with native operators, over the same C ABI.",
     lang: "script",
-    code: `#include <lumen.h>
-
-int main(void) {
-    LumenApp *app = lumen_app_new("app/main.lmn");
-    lumen_on(app, "save", on_save, NULL);
-    return lumen_run(app);
-}`,
+    code: CPP_SDK,
   },
 ];
 
@@ -169,19 +154,22 @@ export interface Snippet {
   code: string;
 }
 
-// One app across its files: markup declares a container, CSS themes the rows,
-// and candela queries the container and builds the rows on the dynamic DOM API.
+// The three files of the `counter` template, verbatim. Markup declares the
+// widgets, CSS themes them from tokens, and candela owns the click handling.
+// Source of truth: lumenc/src/scaffold.rs (the COUNTER constant).
 export const SNIPPETS: Snippet[] = [
   {
     id: "markup",
     label: "main.lmn",
     lang: "lmn",
-    caption: "An empty container with an id. The script fills it; no rows are hand-written.",
-    code: `<root>
-  <column padding="22" gap="12">
-    <label class="title" text="Settings" />
-    <column id="menu" gap="8" />
-  </column>
+    caption: "Widgets carry ids and classes. bind-text points the label at a signal.",
+    code: `<root bg="#0c1c30" padding="32" gap="20" align="center" justify="center">
+  <label class="display" id="counter" width="100%" height="120px" text="0"
+         bind-text="clicks" />
+  <row gap="14" justify="center">
+    <button class="primary" id="bump"  width="120px" height="48px" text="+1" />
+    <button class="primary" id="reset" width="120px" height="48px" text="reset" />
+  </row>
   <script src="main.cdl" />
 </root>`,
   },
@@ -191,33 +179,33 @@ export const SNIPPETS: Snippet[] = [
     lang: "css",
     caption: "Tokens on :root, referenced with var(). Familiar selectors and states.",
     code: `:root {
-  --accent: #2fd6cf;
-  --surface: #12313a;
+  --color-accent:  #5fd9e0;
+  --color-bg:      #163459;
+  --color-hover:   #1d4477;
+  --color-active:  #0e2c52;
+  --color-on-bg:   #ffffff;
+  --radius-pill:   24;
 }
 
-.title { font-size: 22; text-color: #cfeee9; }
+.display { text-align: center; font-size: 96; text-color: var(--color-on-bg); }
 
-.item {
-  bg: var(--surface);
-  text-color: #eafcfa;
-  padding: 10;
-  radius: 8;
-  hover-bg: #17414c;
-}`,
+.primary {
+  bg:        var(--color-bg);
+  hover-bg:  var(--color-hover);
+  press-bg:  var(--color-active);
+  text-color: var(--color-on-bg);
+  radius:    var(--radius-pill);
+  text-align: center;
+  font-size: 18;
+}
+.primary:focus { outline: 2 var(--color-accent); }`,
   },
   {
     id: "script",
     label: "main.cdl",
     lang: "script",
-    caption: "on_ready fires once the DOM mounts. Query the container, append a row per item.",
-    code: `import "lumen.cdl";
-
-fn on_ready() {
-    let menu = node_query("#menu");
-    for item in ["Account", "Display", "Privacy"] {
-        lm_append(menu, "row", "item", item);
-    }
-}`,
+    caption: "on_ready looks the buttons up and binds their clicks. The label follows the signal.",
+    code: HERO_CDL,
   },
 ];
 

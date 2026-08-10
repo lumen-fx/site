@@ -76,6 +76,12 @@ jobs:
       - name: Build docs (zensical)
         run: uv run zensical build --strict -f zensical.docs.toml
 
+      # Both landings show code. Every example whose source is a file in a
+      # product repo is read from that repo here, so a page cannot show an API
+      # that no longer exists. A moved or deleted source fails the build.
+      - name: Fetch code examples
+        run: uv run python scripts/fetch_examples.py
+
       # The Lumen landing is a static Vite + React app. Fetch install.sh fresh
       # from the lumen repo so it ships at lumenfx.dev/install.sh, then build
       # to dist/apex.

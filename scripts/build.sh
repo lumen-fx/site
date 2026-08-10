@@ -25,6 +25,11 @@ uv run python scripts/prebuild.py
 echo "== building docs (zensical) =="
 uv run zensical build --strict -f zensical.docs.toml
 
+# --- Code examples for both landings ---
+# Pulled from the product repos so the pages cannot drift from what they ship.
+echo "== fetching code examples =="
+uv run python scripts/fetch_examples.py
+
 # --- Lumen landing (Vite + React) -> dist/apex ---
 echo "== building apex / lumen (vite + react) =="
 uv run python scripts/fetch_lumen_install.py

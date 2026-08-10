@@ -3,7 +3,7 @@ import { CodeBlock } from "./CodeBlock";
 import { SDKS } from "../data";
 
 // Drive Lumen from a host language instead of a script: own the state and the
-// event handlers in Rust, Python, or C/C++, all on the same C ABI.
+// event handlers in Rust, Python, or C++, all on the same C ABI.
 export function Sdks() {
   const [active, setActive] = useState(SDKS[0].name);
   const sdk = SDKS.find((s) => s.name === active) ?? SDKS[0];
@@ -15,7 +15,7 @@ export function Sdks() {
           <span className="eyebrow">SDKs</span>
           <h2 className="section__title">Drive it from your language</h2>
           <p className="section__lead">
-            Own the state and event handlers from Rust, Python, or C and C++ instead of a
+            Own the state and event handlers from Rust, Python, or C++ instead of a
             script. Every SDK sits on the same C ABI.
           </p>
         </div>
