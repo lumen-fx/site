@@ -4,7 +4,7 @@
 The Lumen landing hosts the installer itself so `curl -fsSL
 https://lumenfx.dev/install.sh | sh` works. install.sh is the source of
 truth in the lumen repo; it is never committed here. This clones the lumen
-repo at a rev (branch, tag, or SHA) and copies tools/install.sh to
+repo at a rev (branch, tag, or SHA) and copies the installer to
 apps/lumen/public/install.sh, from where `vite build` copies it to the dist
 root.
 
@@ -30,6 +30,9 @@ PUBLIC = ROOT / "apps" / "lumen" / "public"
 REPO = os.environ.get("LUMEN_REPO", "https://github.com/lumen-fx/lumen")
 REV = os.environ.get("LUMEN_REV", "main")
 
+# Where the installer lives in the lumen repo.
+INSTALL_PATH = "tools/release/install.sh"
+
 
 def run(cmd: list, **kw) -> None:
     print("+", " ".join(str(c) for c in cmd), flush=True)
@@ -41,16 +44,16 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         dest = Path(tmp) / "lumen"
         dest.mkdir()
-        # Skip LFS smudge: only tools/install.sh is read, so pointer files
-        # are fine and the fetch cannot fail on LFS object availability.
+        # Skip LFS smudge: only the installer is read, so pointer files are
+        # fine and the fetch cannot fail on LFS object availability.
         env = dict(os.environ, GIT_LFS_SKIP_SMUDGE="1")
         run(["git", "init", "-q", dest])
         run(["git", "-C", dest, "remote", "add", "origin", REPO])
         run(["git", "-C", dest, "fetch", "-q", "--depth", "1", "origin", REV], env=env)
         run(["git", "-C", dest, "checkout", "-q", "FETCH_HEAD"], env=env)
-        src = dest / "tools" / "install.sh"
+        src = dest / INSTALL_PATH
         if not src.is_file():
-            sys.exit(f"error: tools/install.sh not found in lumen repo at rev {REV}")
+            sys.exit(f"error: {INSTALL_PATH} not found in lumen repo at rev {REV}")
         out = PUBLIC / "install.sh"
         shutil.copyfile(src, out)
         out.chmod(0o755)
