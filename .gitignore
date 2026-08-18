@@ -13,6 +13,9 @@ node_modules/
 /apps/candela/public/install.sh
 # install.sh is fetched fresh from the lumen repo, never committed
 /apps/lumen/public/install.sh
+# The candela runtime the prompt loads is fetched from a candela release at
+# build time; the binary is never committed here
+/apps/candela/public/runtime/
 
 # Zensical static output
 /dist/

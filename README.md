@@ -7,8 +7,12 @@ Source for the Lumen and Candela websites.
 - The docs build puts the Lumen and Candela docs under one search at
   `docs.lumenfx.dev`: Lumen at the root, Candela under `/candela/`.
 
-The landings are React (Vite, TypeScript, Bootstrap). The docs use
+The landings are React (Vite, TypeScript). The docs use
 [Zensical](https://zensical.org). Everything builds to static files.
+
+The Candela landing runs candela in the browser: its prompt loads the runtime
+compiled to WebAssembly and published as a release asset, so a visitor can try
+the language before installing it.
 
 ## Build
 
@@ -32,6 +36,15 @@ fresh from its repo instead, which is what CI does. `scripts/prebuild.py` lists
 the variables that point at other sources. `install.sh` on both the Lumen and
 Candela landings is fetched fresh from the matching product repo the same way
 and is never committed here.
+
+The candela runtime the prompt loads is fetched the same way, from the `web`
+asset of a candela release. Set `CANDELA_WASM_TAG` to take it from a particular
+release, or `CANDELA_WASM_DIR` to use a local `wasm-pack build --target web`
+output directory instead:
+
+```sh
+CANDELA_WASM_DIR=~/candela/pkg scripts/build.sh
+```
 
 The Lumen installer behind `curl -fsSL https://lumenfx.dev/install.sh | sh`
 queries the GitHub Releases API for `lumen-fx/lumen` directly; there is
