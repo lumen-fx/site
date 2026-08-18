@@ -35,6 +35,10 @@ on:
         description: "lumen rev to build the docs from (branch, tag, or SHA)"
         required: false
         default: "main"
+      candela_wasm_tag:
+        description: "candela release to take the browser runtime from"
+        required: false
+        default: "latest"
 
 permissions:
   contents: read
@@ -99,6 +103,16 @@ jobs:
       # build to dist/candela.
       - name: Package candela install.sh
         run: uv run python scripts/fetch_candela_install.py
+
+      # The prompt on that landing runs candela in the browser. The runtime it
+      # loads is the web asset from a candela release, so the page and the
+      # toolchain a visitor installs come from one source at one version.
+      # GITHUB_TOKEN only raises the API rate limit for reading the release.
+      - name: Fetch the candela runtime (wasm)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CANDELA_WASM_TAG: ${{ github.event.inputs.candela_wasm_tag || 'latest' }}
+        run: uv run python scripts/fetch_candela_wasm.py
 
       - name: Install candela landing deps
         run: npm --prefix apps/candela ci

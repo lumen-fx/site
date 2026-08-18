@@ -16,6 +16,7 @@
 #   LUMEN_DOCS_SRC=~/lumen/docs scripts/build.sh   # point the Lumen docs elsewhere
 #   LUMEN_REV=v0.2.0 scripts/build.sh     # pin the lumen docs + install.sh to a tag/SHA
 #   CANDELA_REV=v0.2.0 scripts/build.sh   # pin the candela docs + install.sh to a tag/SHA
+#   CANDELA_WASM_DIR=~/candela/pkg scripts/build.sh   # local candela runtime
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -37,8 +38,12 @@ npm --prefix apps/lumen ci
 npm --prefix apps/lumen run build
 
 # --- Candela landing (Vite + React) ---
+# The landing runs candela in the browser, so it also needs the WebAssembly
+# runtime from a candela release. Before a release carries that asset, point
+# CANDELA_WASM_DIR at a local `wasm-pack build --target web` output directory.
 echo "== building candela (vite + react) =="
 uv run python scripts/fetch_candela_install.py
+uv run python scripts/fetch_candela_wasm.py
 npm --prefix apps/candela ci
 npm --prefix apps/candela run build
 

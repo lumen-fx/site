@@ -5,11 +5,13 @@ The landings show code. Hand-copied code goes stale, so every example whose
 source is addressable as a file is pulled from the product repo at build time
 and written into a generated TypeScript module the landing imports.
 
-Two source shapes are supported:
+Four source shapes are supported:
 
   whole file      a runnable program, taken verbatim
   fenced block    the first fenced code block under a heading in a markdown
                   file, or the first fenced block in a Rust doc comment
+  template entry  one file out of a `lumenc new` template, which lives in the
+                  lumen repo as a Rust slice of (name, contents) pairs
 
 The generated modules are committed so `vite build` works from a fresh clone,
 and CI regenerates them before every deploy, so what ships is always current.
@@ -44,11 +46,37 @@ CANDELA_REV = os.environ.get("CANDELA_REV", "main")
 
 # What each landing shows, and where it comes from.
 #
-#   const   the exported name in the generated module
-#   path    the source file, relative to the product repo root
-#   kind    "file" (verbatim), "fence" (markdown), or "rustdoc"
-#   after   for "fence": the heading line the block must follow
+#   const     the exported name in the generated module
+#   path      the source file, relative to the product repo root
+#   kind      "file" (verbatim), "fence" (markdown), "rustdoc", or "template"
+#   after     for "fence": the heading line the block must follow
+#   template  for "template": the Rust const holding the template
+#   entry     for "template": which file of that template to take
 LUMEN_EXAMPLES = [
+    # The counter template, as `lumenc new app counter` writes it to disk. The
+    # landing shows all three of its files, so what a visitor reads is what the
+    # toolchain scaffolds.
+    {
+        "const": "COUNTER_LMN",
+        "path": "crates/lumenc/src/scaffold.rs",
+        "kind": "template",
+        "template": "COUNTER",
+        "entry": "main.lmn",
+    },
+    {
+        "const": "COUNTER_CSS",
+        "path": "crates/lumenc/src/scaffold.rs",
+        "kind": "template",
+        "template": "COUNTER",
+        "entry": "main.css",
+    },
+    {
+        "const": "COUNTER_CDL",
+        "path": "crates/lumenc/src/scaffold.rs",
+        "kind": "template",
+        "template": "COUNTER",
+        "entry": "main.cdl",
+    },
     {
         "const": "RUST_SDK",
         "path": "sdk/rust/src/lib.rs",
@@ -68,11 +96,40 @@ LUMEN_EXAMPLES = [
     },
 ]
 
+# The Candela landing runs its samples in the browser, so every one of these has
+# to be a whole program that compiles: a `fn main`, and no `import`, because the
+# WebAssembly build has no file system to import from. They are the language
+# documentation's own examples, so the page and the docs cannot drift apart.
 CANDELA_EXAMPLES = [
     {
-        "const": "LIST_HOF",
-        "path": "libs/std/tests/test_list_hof.cdl",
-        "kind": "file",
+        "const": "TOUR_METHODS",
+        "path": "docs/docs/language/methods.md",
+        "kind": "fence",
+        "after": "## impl blocks",
+    },
+    {
+        "const": "TOUR_ENUMS",
+        "path": "docs/docs/language/enums.md",
+        "kind": "fence",
+        "after": "## Matching",
+    },
+    {
+        "const": "TOUR_FUNCTIONS",
+        "path": "docs/docs/language/functions.md",
+        "kind": "fence",
+        "after": "## Functions as arguments",
+    },
+    {
+        "const": "TOUR_MAPS",
+        "path": "docs/docs/language/collections.md",
+        "kind": "fence",
+        "after": "## Maps",
+    },
+    {
+        "const": "TOUR_GENERICS",
+        "path": "docs/docs/language/generics.md",
+        "kind": "fence",
+        "after": "# Generics",
     },
 ]
 
@@ -92,6 +149,13 @@ def clone(repo: str, rev: str, dest: Path) -> None:
     run(["git", "-C", dest, "checkout", "-q", "FETCH_HEAD"], env=env)
 
 
+def source_label(spec: dict) -> str:
+    """Where a constant came from, for the comment above it."""
+    if spec["kind"] == "template":
+        return f"{spec['path']} ({spec['template']} template, {spec['entry']})"
+    return spec["path"]
+
+
 def read_source(root: Path, spec: dict, label: str) -> str:
     src = root / spec["path"]
     if not src.is_file():
@@ -104,6 +168,8 @@ def read_source(root: Path, spec: dict, label: str) -> str:
         return extract_fence(text, spec["after"], spec["path"], label)
     if spec["kind"] == "rustdoc":
         return extract_rustdoc(text, spec["path"], label)
+    if spec["kind"] == "template":
+        return extract_template(text, spec["template"], spec["entry"], spec["path"], label)
     sys.exit(f"error: {label}: unknown source kind {spec['kind']!r}")
 
 
@@ -151,6 +217,59 @@ def extract_rustdoc(text: str, path: str, label: str) -> str:
     sys.exit(f"error: {label}: no doc-comment code fence found in {path}")
 
 
+def extract_template(text: str, template: str, entry: str, path: str, label: str) -> str:
+    """One file out of a `lumenc new` template.
+
+    A template is a Rust slice of (filename, contents) pairs, and the contents
+    are usually raw strings, so this walks to the wanted filename and reads the
+    string literal that follows it.
+    """
+    head = re.search(rf"const\s+{re.escape(template)}\s*:[^=]*=\s*&\[", text)
+    if not head:
+        sys.exit(f"error: {label}: template {template!r} not found in {path}")
+
+    # Match the name as a tuple key, not anywhere in the file: a template's own
+    # contents mention the other files in it, and a bare search finds those
+    # first (main.lmn carries `<script src="main.cdl" />`).
+    body = text[head.end() :]
+    pair = re.search(rf'\(\s*"{re.escape(entry)}"\s*,\s*', body)
+    if not pair:
+        sys.exit(f"error: {label}: template {template!r} has no {entry!r} in {path}")
+    return read_rust_string(body[pair.end() :], entry, path, label)
+
+
+def read_rust_string(src: str, entry: str, path: str, label: str) -> str:
+    """The Rust string literal at the start of `src`, raw or escaped."""
+    if src.startswith("r"):
+        hashes = 0
+        while src[1 + hashes] == "#":
+            hashes += 1
+        if src[1 + hashes] != '"':
+            sys.exit(f"error: {label}: malformed raw string for {entry!r} in {path}")
+        close = '"' + "#" * hashes
+        end = src.find(close, 2 + hashes)
+        if end == -1:
+            sys.exit(f"error: {label}: unterminated raw string for {entry!r} in {path}")
+        return src[2 + hashes : end].rstrip("\n")
+
+    if not src.startswith('"'):
+        sys.exit(f"error: {label}: no string literal for {entry!r} in {path}")
+    out: list[str] = []
+    i = 1
+    escapes = {"n": "\n", "t": "\t", "r": "\r", "0": "\0", '"': '"', "\\": "\\"}
+    while i < len(src):
+        c = src[i]
+        if c == "\\":
+            out.append(escapes.get(src[i + 1], src[i + 1]))
+            i += 2
+            continue
+        if c == '"':
+            return "".join(out).rstrip("\n")
+        out.append(c)
+        i += 1
+    sys.exit(f"error: {label}: unterminated string for {entry!r} in {path}")
+
+
 def emit(out: Path, label: str, rev: str, entries: list[tuple[str, str, str]]) -> None:
     """Write the generated module. `entries` is (const, path, code)."""
     parts = [
@@ -177,7 +296,9 @@ def main() -> None:
         for label, repo, rev, specs, out in targets:
             checkout = Path(tmp) / label
             clone(repo, rev, checkout)
-            entries = [(s["const"], s["path"], read_source(checkout, s, label)) for s in specs]
+            entries = [
+                (s["const"], source_label(s), read_source(checkout, s, label)) for s in specs
+            ]
             emit(ROOT / out, label, rev, entries)
 
 

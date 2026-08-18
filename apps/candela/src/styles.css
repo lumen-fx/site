@@ -1,567 +1,835 @@
 /*
- * Bespoke Candela landing theme. Bootstrap supplies the reset, grid, and
- * utilities; this layer adds the brand design tokens, typography, and component
- * styling on top. Dark-first, with a full light mode driven by Bootstrap's
- * data-bs-theme attribute. Brand colours come from the Candela flame logo:
- * flame orange #F16529 and deep navy #22135B.
+ * The candela landing.
+ *
+ * A candela measures the light of one candle, so the page keeps one lit and
+ * lets it do the reporting: the flame stands for the runtime, and the wax for
+ * how far down the page you are. Everything else is a terminal. Warm soot for
+ * the ground, flame for anything live, a pixel terminal face for the language
+ * itself and a plain grotesque for prose. No cards, no rounded panels, no
+ * gradients that are not the candle's own light.
  */
 
+@font-face {
+  font-family: "Departure Mono";
+  src: url("/fonts/departure-mono.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Public Sans";
+  src: url("/fonts/public-sans-latin.woff2") format("woff2");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
+  --term: "Departure Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --prose: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --soot: #14100e;
+  --soot-2: #0d0a09;
+  --smoke: #1e1815;
+  --ash: #2a221e;
+  --ash-2: #3a2f28;
+
+  --wax: #efe7dc;
+  --wax-dim: #b3a698;
+  --wax-faint: #6f645b;
+
   --flame: #f16529;
-  --flame-2: #f8934a;
-  --flame-soft: #fbbf6b;
-  --navy: #22135b;
+  --flame-hot: #ffb347;
+  --flame-cool: #c0431a;
+  --ember: rgba(241, 101, 41, 0.16);
 
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif;
-  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
-  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", "Cascadia Code",
-    Menlo, Consolas, monospace;
+  --tok-comment: #6f645b;
+  --tok-string: #d9b169;
+  --tok-number: #e0895c;
+  --tok-keyword: #f16529;
+  --tok-literal: #ffb347;
+  --tok-type: #9fb0a3;
+  --tok-fn: #efe7dc;
 
-  --radius: 14px;
-  --radius-sm: 10px;
-  --maxw: 1140px;
-}
+  --rail: 96px;
 
-/* ---- Dark theme (default) ---------------------------------------------- */
-[data-bs-theme="dark"] {
-  --bg: #0d0a1c;
-  --bg-grad: #140d2b;
-  --surface: #161031;
-  --surface-2: #1c1540;
-  --border: rgba(255, 255, 255, 0.09);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --text: #ece9f6;
-  --heading: #ffffff;
-  --muted: #a79fc6;
-  --code-bg: #120c28;
-
-  --tok-comment: #6f689a;
-  --tok-string: #86e0b0;
-  --tok-number: #d8a2ff;
-  --tok-keyword: #ff8b6b;
-  --tok-literal: #ffb27a;
-  --tok-type: #7fb0ff;
-  --tok-fn: #ffcf8f;
-}
-
-/* ---- Light theme ------------------------------------------------------- */
-[data-bs-theme="light"] {
-  --bg: #faf9fd;
-  --bg-grad: #f2eefb;
-  --surface: #ffffff;
-  --surface-2: #f6f3fc;
-  --border: #e7e2f1;
-  --border-strong: #d8d1ea;
-  --text: #2a2444;
-  --heading: #1a1138;
-  --muted: #5f5880;
-  --code-bg: #f7f5fc;
-
-  --tok-comment: #8a83a6;
-  --tok-string: #0f766e;
-  --tok-number: #7c3aed;
-  --tok-keyword: #c2410c;
-  --tok-literal: #b45309;
-  --tok-type: #1d4ed8;
-  --tok-fn: #92600b;
+  color-scheme: dark;
 }
 
 * {
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;
-  font-family: var(--font-sans);
-  background-color: var(--bg);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
-  line-height: 1.6;
+/* No scrollbar chrome anywhere, including inside the prompt and the code
+   panels. The candle reports how far down the page you are. Scrolling itself
+   is untouched. */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
-.container {
-  max-width: var(--maxw);
+body {
+  margin: 0;
+  background: var(--soot);
+  color: var(--wax);
+  font-family: var(--prose);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* The room the candle lights. The centre follows the flame, which the candle
+   writes on every frame as it burns down, so the light comes from the wick
+   rather than from a spot chosen once. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    46% 42% at var(--flame-x, calc(var(--rail) / 2)) var(--flame-y, 34%),
+    rgba(241, 101, 41, 0.14),
+    rgba(241, 101, 41, 0.035) 42%,
+    transparent 72%
+  );
 }
 
 a {
   color: var(--flame);
-  text-decoration: none;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 a:hover {
-  color: var(--flame-2);
-  text-decoration: underline;
-}
-
-code {
-  font-family: var(--font-mono);
+  color: var(--flame-hot);
 }
 
 :focus-visible {
-  outline: 2px solid var(--flame);
+  outline: 2px solid var(--flame-hot);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 
-/* ---- Nav --------------------------------------------------------------- */
-.site-nav {
-  background-color: color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter: saturate(140%) blur(10px);
-  border-bottom: 1px solid var(--border);
-  padding: 0.55rem 0;
-}
-.site-nav__brand {
-  color: var(--heading);
-}
-.site-nav__brand:hover {
-  text-decoration: none;
-}
-.site-nav__wordmark {
-  font-family: var(--font-serif);
-  font-size: 1.4rem;
+h1,
+h2,
+h3 {
+  margin: 0;
   font-weight: 600;
-  letter-spacing: 0.01em;
-  color: var(--heading);
-}
-.site-nav__link {
-  color: var(--muted);
-  font-weight: 500;
-  font-size: 0.95rem;
-}
-.site-nav__link:hover {
-  color: var(--text);
-  text-decoration: none;
-}
-.theme-toggle {
-  border: 1px solid var(--border-strong);
-  background: var(--surface);
-  color: var(--text);
-  border-radius: 999px;
-  padding: 0.3rem 0.9rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
-}
-.theme-toggle:hover {
-  border-color: var(--flame);
-  color: var(--flame);
+  letter-spacing: -0.015em;
+  line-height: 1.15;
 }
 
-/* ---- Hero -------------------------------------------------------------- */
-.hero {
+p {
+  margin: 0;
+}
+
+.skip {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 40;
+  padding: 8px 14px;
+  background: var(--flame);
+  color: var(--soot);
+  font-family: var(--term);
+  font-size: 0.8rem;
+  transform: translateY(-200%);
+}
+.skip:focus {
+  transform: none;
+}
+
+/* ---- The candle -------------------------------------------------------- */
+
+.candle {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 5;
+  width: var(--rail);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-right: 1px solid var(--ash);
+  background: linear-gradient(180deg, var(--soot-2), var(--soot));
+  pointer-events: none;
+}
+
+.candle__flame {
   position: relative;
-  overflow: hidden;
-  padding: clamp(3.5rem, 8vw, 7rem) 0 clamp(3rem, 6vw, 5.5rem);
-  background:
-    radial-gradient(60% 55% at 78% 12%, color-mix(in srgb, var(--flame) 22%, transparent), transparent 70%),
-    radial-gradient(50% 60% at 6% 4%, color-mix(in srgb, var(--navy) 45%, transparent), transparent 72%),
-    linear-gradient(180deg, var(--bg-grad), var(--bg));
+  width: 26px;
+  height: 44px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
-.hero__eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--flame);
-  margin-bottom: 0.6rem;
+.candle__tip {
+  width: 13px;
+  height: 26px;
+  border-radius: 50% 50% 46% 46% / 68% 68% 32% 32%;
+  background: radial-gradient(60% 62% at 50% 74%, #fff5d8, var(--flame-hot) 44%, var(--flame) 78%);
+  transform-origin: 50% 100%;
+  animation: flicker 2.6s ease-in-out infinite;
 }
-.hero__title {
-  font-family: var(--font-serif);
-  font-size: clamp(3.4rem, 9vw, 6rem);
-  line-height: 1;
-  font-weight: 700;
-  margin: 0 0 1.1rem;
-  letter-spacing: -0.01em;
-  background: linear-gradient(120deg, var(--flame), var(--flame-soft));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+.candle__glow {
+  position: absolute;
+  bottom: -6px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 179, 71, 0.28), transparent);
 }
-.hero__tagline {
-  font-size: clamp(1.15rem, 2.3vw, 1.45rem);
-  color: var(--text);
-  max-width: 34ch;
-  margin-bottom: 1.8rem;
+
+/* The runtime, reported by the flame. */
+.candle--loading .candle__tip {
+  animation-duration: 1.1s;
+  filter: saturate(0.6);
 }
-.hero__cta {
+.candle--burning .candle__tip {
+  height: 38px;
+  animation-duration: 0.42s;
+}
+.candle--burning .candle__glow {
+  background: radial-gradient(closest-side, rgba(255, 179, 71, 0.42), transparent);
+}
+.candle--guttering .candle__tip {
+  background: radial-gradient(60% 62% at 50% 74%, #ffd9a8, var(--flame-cool) 52%, #6b2410 88%);
+  animation-duration: 0.16s;
+}
+.candle--out .candle__tip {
+  background: var(--ash-2);
+  animation: none;
+}
+.candle--out .candle__glow {
+  display: none;
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    transform: scaleY(1) skewX(0deg);
+  }
+  28% {
+    transform: scaleY(1.1) skewX(-3deg);
+  }
+  54% {
+    transform: scaleY(0.94) skewX(2deg);
+  }
+  76% {
+    transform: scaleY(1.06) skewX(-1deg);
+  }
+}
+
+/* The wax, burning down as the page is read. --burnt is written on scroll. */
+.candle__stick {
+  --burnt: 0;
+  position: relative;
+  width: 30px;
+  height: calc(260px - 210px * var(--burnt));
+  display: flex;
+  justify-content: center;
+}
+.candle__wick {
+  position: absolute;
+  top: -6px;
+  width: 2px;
+  height: 8px;
+  background: var(--ash-2);
+}
+.candle__wax {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #d8cbbd, #f6efe6 38%, #cbbdae);
+  box-shadow: inset 0 6px 10px -6px rgba(0, 0, 0, 0.4);
+}
+
+.candle__unit {
+  font-family: var(--term);
+  font-size: 0.72rem;
+  color: var(--wax-faint);
+}
+
+/* ---- Page frame -------------------------------------------------------- */
+
+.masthead {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px clamp(18px, 4vw, 44px) 18px calc(var(--rail) + clamp(18px, 3vw, 36px));
+  border-bottom: 1px solid var(--ash);
+}
+.masthead__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--term);
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+}
+.masthead__links {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1.6rem;
+  gap: clamp(12px, 2vw, 24px);
+  font-family: var(--term);
+  font-size: 0.82rem;
+}
+.masthead__links a {
+  color: var(--wax-dim);
+  text-decoration: none;
+}
+.masthead__links a:hover {
+  color: var(--flame);
 }
 
-/* ---- Buttons ----------------------------------------------------------- */
-.btn-flame {
-  background: linear-gradient(120deg, var(--flame), var(--flame-2));
-  border: none;
-  color: #fff;
-  font-weight: 600;
-  box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--flame) 75%, transparent);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: clamp(30px, 5vw, 64px) clamp(18px, 4vw, 44px) 80px
+    calc(var(--rail) + clamp(18px, 3vw, 36px));
 }
-.btn-flame:hover {
-  color: #fff;
-  transform: translateY(-1px);
-  box-shadow: 0 12px 26px -8px color-mix(in srgb, var(--flame) 85%, transparent);
+
+.page > section + section {
+  margin-top: clamp(56px, 8vw, 104px);
 }
-.btn-outline-soft {
-  border: 1px solid var(--border-strong);
-  color: var(--text);
-  font-weight: 600;
+
+/* ---- The opening ------------------------------------------------------- */
+
+.opening__title {
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  max-width: 20ch;
+}
+.opening__sub {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--term);
+  font-size: clamp(0.9rem, 1.4vw, 1.05rem);
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--flame);
+}
+
+/* ---- The prompt -------------------------------------------------------- */
+
+.prompt {
+  margin-top: 28px;
+  border: 1px solid var(--ash-2);
+  background: var(--soot-2);
+  font-family: var(--term);
+  font-size: 0.88rem;
+}
+
+.prompt__bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ash);
+  color: var(--wax-faint);
+  font-size: 0.78rem;
+}
+.prompt__title {
+  color: var(--flame);
+}
+.prompt__state {
+  flex: 1 1 auto;
+}
+.prompt__reset {
+  padding: 3px 10px;
+  border: 1px solid var(--ash-2);
   background: transparent;
+  color: var(--wax-dim);
+  font: inherit;
+  cursor: pointer;
 }
-.btn-outline-soft:hover {
+.prompt__reset:hover:not(:disabled) {
+  border-color: var(--flame);
+  color: var(--flame);
+}
+.prompt__reset:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.prompt__log {
+  height: clamp(240px, 38vh, 380px);
+  overflow-y: auto;
+  padding: 14px 14px 8px;
+}
+
+.prompt__banner {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--ash);
+  color: var(--wax-faint);
+  font-family: var(--prose);
+  font-size: 0.86rem;
+  max-width: 74ch;
+}
+
+.prompt__line {
+  margin: 0 0 6px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: inherit;
+  tab-size: 4;
+}
+.prompt__line--in {
+  color: var(--wax);
+}
+.prompt__line--out {
+  color: var(--flame-hot);
+}
+.prompt__line--err {
+  color: var(--wax-dim);
+  line-height: 1.4;
+  overflow-x: auto;
+}
+.prompt__line--note {
+  color: var(--wax-faint);
+  font-family: var(--prose);
+  font-size: 0.86rem;
+}
+
+.prompt__caret {
+  margin-right: 8px;
+  color: var(--flame);
+}
+
+.prompt__try {
+  color: var(--wax-faint);
+  font-size: 0.82rem;
+}
+.prompt__seed {
+  margin: 0 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--ash-2);
+  background: transparent;
+  color: var(--wax-dim);
+  font: inherit;
+  cursor: pointer;
+}
+.prompt__seed:hover {
+  border-color: var(--flame);
+  color: var(--flame-hot);
+}
+
+.prompt__entry {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--ash);
+  flex-wrap: wrap;
+}
+.prompt__input {
+  flex: 1 1 260px;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--wax);
+  font: inherit;
+  resize: vertical;
+  outline: none;
+}
+.prompt__input::placeholder {
+  color: var(--wax-faint);
+}
+.prompt__hint {
+  flex: 0 0 auto;
+  color: var(--wax-faint);
+  font-size: 0.72rem;
+}
+
+/* candela's own error colours, kept as it prints them. */
+.ansi-red {
+  color: #ff7a5c;
+}
+.ansi-green {
+  color: #9fd68b;
+}
+.ansi-yellow {
+  color: var(--flame-hot);
+}
+.ansi-blue {
+  color: #8fb8e8;
+}
+.ansi-cyan {
+  color: #86ccc4;
+}
+.ansi-dim {
+  color: var(--wax-faint);
+}
+.ansi-fg {
+  color: var(--wax-dim);
+}
+.ansi-b {
+  font-weight: 700;
+}
+
+/* ---- The tour ---------------------------------------------------------- */
+
+.tour__title,
+.runtime__title,
+.install__title {
+  font-size: clamp(1.4rem, 2.6vw, 2rem);
+}
+.tour__lede,
+.runtime__lede,
+.install__lede {
+  margin-top: 10px;
+  max-width: 68ch;
+  color: var(--wax-dim);
+}
+
+.tour__list {
+  margin: 30px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+}
+.tour__item {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(16px, 3vw, 34px);
+  align-items: start;
+  padding-top: 26px;
+  border-top: 1px solid var(--ash);
+}
+.tour__head {
+  font-size: 1.1rem;
+}
+.tour__body {
+  margin-top: 8px;
+  color: var(--wax-dim);
+  font-size: 0.92rem;
+}
+.tour__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.tour__run {
+  padding: 7px 15px;
+  border: 1px solid var(--flame);
+  background: transparent;
+  color: var(--flame);
+  font-family: var(--term);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.tour__run:hover {
+  background: var(--ember);
+  color: var(--flame-hot);
+}
+.tour__edit {
+  padding: 7px 13px;
+  border: 1px solid var(--ash-2);
+  background: transparent;
+  color: var(--wax-dim);
+  font-family: var(--term);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.tour__edit:hover {
   border-color: var(--flame);
   color: var(--flame);
 }
 
-/* ---- Install one-liner ------------------------------------------------- */
-.install {
+/* The editable form of an entry: the same box as the code block, with the
+   source in it rather than a rendering of it. */
+.tour__editor {
+  border: 1px solid var(--flame);
+  background: var(--soot-2);
+}
+.tour__editor-bar {
   display: flex;
-  align-items: stretch;
-  gap: 0;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--code-bg);
-  overflow: hidden;
-  max-width: 520px;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 11px;
+  border-bottom: 1px solid var(--ash);
+  font-family: var(--term);
+  font-size: 0.74rem;
+  color: var(--wax-faint);
 }
-.install__cmd {
-  flex: 1;
-  padding: 0.7rem 0.9rem;
-  font-size: 0.92rem;
-  color: var(--text);
-  white-space: nowrap;
-  overflow-x: auto;
-}
-.install__prompt {
-  color: var(--flame);
-  user-select: none;
-  margin-right: 0.4rem;
-}
-.install__copy {
-  border: none;
-  border-left: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--muted);
-  font-weight: 600;
-  font-size: 0.85rem;
-  padding: 0 1rem;
-  cursor: pointer;
-}
-.install__copy:hover {
+.tour__changed {
   color: var(--flame);
 }
-.install__note {
-  font-size: 0.85rem;
-  color: var(--muted);
-  margin-top: 0.6rem;
+.tour__source {
+  display: block;
+  width: 100%;
+  padding: 13px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--wax);
+  font-family: var(--term);
+  font-size: 0.83rem;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  tab-size: 4;
 }
 
-/* ---- Code block -------------------------------------------------------- */
+/* The program the session recompiles, shown on request. */
+.prompt__program {
+  margin: 0;
+  padding: 12px 14px;
+  border-top: 1px dashed var(--ash);
+  max-height: 220px;
+  overflow: auto;
+  color: var(--wax-dim);
+  font-family: var(--term);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.prompt__reset--on {
+  border-color: var(--flame);
+  color: var(--flame);
+}
+
+/* ---- Code -------------------------------------------------------------- */
+
 .code-block {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--code-bg);
-  overflow: hidden;
-  box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.6);
+  min-width: 0;
+  border: 1px solid var(--ash);
+  background: var(--soot-2);
 }
 .code-block__bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0.9rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-}
-.code-block__lang {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
+  padding: 6px 11px;
+  border-bottom: 1px solid var(--ash);
+  font-family: var(--term);
+  font-size: 0.74rem;
+  color: var(--wax-faint);
 }
 .code-block__copy {
-  border: 1px solid var(--border-strong);
+  padding: 2px 9px;
+  border: 1px solid var(--ash-2);
   background: transparent;
-  color: var(--muted);
-  border-radius: 7px;
-  padding: 0.2rem 0.7rem;
-  font-size: 0.78rem;
-  font-weight: 600;
+  color: var(--wax-faint);
+  font: inherit;
   cursor: pointer;
 }
 .code-block__copy:hover {
-  color: var(--flame);
   border-color: var(--flame);
+  color: var(--flame);
 }
 .code-block__pre {
   margin: 0;
-  padding: 1.1rem 1.25rem;
+  padding: 13px 14px;
   overflow-x: auto;
-  font-size: 0.9rem;
-  line-height: 1.7;
-}
-.code-block__pre code {
-  color: var(--text);
-  font-family: var(--font-mono);
-}
-
-.tok-comment { color: var(--tok-comment); font-style: italic; }
-.tok-string  { color: var(--tok-string); }
-.tok-number  { color: var(--tok-number); }
-.tok-keyword { color: var(--tok-keyword); font-weight: 600; }
-.tok-literal { color: var(--tok-literal); }
-.tok-type    { color: var(--tok-type); }
-.tok-fn      { color: var(--tok-fn); }
-
-/* ---- Sections ---------------------------------------------------------- */
-.section {
-  padding: clamp(3.5rem, 7vw, 6rem) 0;
-}
-.section--muted {
-  background: linear-gradient(180deg, var(--bg), var(--bg-grad));
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-.section__head {
-  max-width: 40rem;
-  margin: 0 auto clamp(2rem, 4vw, 3rem);
-  text-align: center;
-}
-.section__title {
-  font-family: var(--font-serif);
-  font-weight: 700;
-  color: var(--heading);
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-  line-height: 1.15;
-  margin-bottom: 0.75rem;
-}
-.section__lead {
-  color: var(--muted);
-  font-size: 1.1rem;
-  margin: 0;
+  font-family: var(--term);
+  font-size: 0.83rem;
+  line-height: 1.6;
+  color: var(--wax);
+  tab-size: 4;
 }
 
-/* ---- Feature grid ------------------------------------------------------ */
-.feature {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.4rem 1.4rem 1.5rem;
-  transition: transform 0.14s ease, border-color 0.14s ease;
+.tok-comment {
+  color: var(--tok-comment);
 }
-.feature:hover {
-  transform: translateY(-3px);
-  border-color: var(--border-strong);
+.tok-string {
+  color: var(--tok-string);
 }
-.feature__title {
-  font-size: 1.08rem;
-  font-weight: 700;
-  color: var(--heading);
-  margin-bottom: 0.5rem;
+.tok-number {
+  color: var(--tok-number);
 }
-.feature__title::before {
-  content: "";
-  display: block;
-  width: 30px;
-  height: 3px;
-  border-radius: 3px;
-  margin-bottom: 0.85rem;
-  background: linear-gradient(90deg, var(--flame), var(--flame-soft));
+.tok-keyword {
+  color: var(--tok-keyword);
 }
-.feature__body {
-  color: var(--muted);
-  font-size: 0.96rem;
-  margin: 0;
+.tok-literal {
+  color: var(--tok-literal);
+}
+.tok-type {
+  color: var(--tok-type);
+}
+.tok-fn {
+  color: var(--tok-fn);
 }
 
-/* ---- Showcase ---------------------------------------------------------- */
-.showcase {
-  max-width: 820px;
-  margin: 0 auto;
-}
-.showcase__tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 0.85rem;
-}
-.showcase__tab {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
-  border-radius: 999px;
-  padding: 0.4rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.14s ease, border-color 0.14s ease;
-}
-.showcase__tab:hover {
-  color: var(--text);
-}
-.showcase__tab.is-active {
-  color: #fff;
-  background: linear-gradient(120deg, var(--flame), var(--flame-2));
-  border-color: transparent;
-}
-.showcase__caption {
-  color: var(--muted);
-  font-size: 0.95rem;
-  margin-bottom: 0.8rem;
-}
+/* ---- Runtime ----------------------------------------------------------- */
 
-/* ---- Perf callout ------------------------------------------------------ */
-.section__lead code,
-.cta-band__lead code {
-  font-family: var(--font-mono);
-  color: var(--flame);
-  font-size: 0.92em;
-}
-.stat-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  margin-top: 1.75rem;
-}
-.stat__value {
-  font-family: var(--font-serif);
-  font-size: 1.9rem;
-  font-weight: 700;
-  color: var(--flame);
-  line-height: 1;
-}
-.stat__label {
-  color: var(--muted);
-  font-size: 0.85rem;
-  margin-top: 0.3rem;
-}
-.bench {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  padding: 0.5rem 0.5rem 1rem;
-}
-.bench__head,
-.bench__row {
+.runtime__facts {
+  margin: 26px 0 0;
   display: grid;
-  grid-template-columns: 1.6fr 1fr 1fr 1fr;
-  gap: 0.5rem;
-  padding: 0.65rem 0.85rem;
-  align-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 22px 30px;
 }
-.bench__head {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--muted);
-  border-bottom: 1px solid var(--border);
+.runtime__fact dt {
+  font-family: var(--term);
+  font-size: 0.85rem;
+  color: var(--flame);
 }
-.bench__head span:not(:first-child),
-.bench__row span:not(.bench__name) {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-}
-.bench__row {
-  border-bottom: 1px solid var(--border);
-}
-.bench__row:last-of-type {
-  border-bottom: none;
-}
-.bench__name {
-  color: var(--text);
-  font-weight: 600;
+.runtime__fact dd {
+  margin: 6px 0 0;
+  color: var(--wax-dim);
   font-size: 0.92rem;
 }
-.bench__candela {
-  color: var(--flame);
-  font-weight: 700;
+
+.speed {
+  margin: 34px 0 0;
 }
-.bench__other {
-  color: var(--muted);
+.speed__cap {
+  font-family: var(--term);
+  font-size: 0.76rem;
+  color: var(--wax-faint);
+  margin-bottom: 10px;
 }
-.bench__foot {
-  color: var(--muted);
-  font-size: 0.8rem;
-  margin: 0.75rem 0.85rem 0;
+.speed__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--term);
+  font-size: 0.84rem;
+}
+.speed__table th,
+.speed__table td {
+  padding: 7px 10px;
+  text-align: right;
+  border-bottom: 1px solid var(--ash);
+  font-weight: 400;
+  color: var(--wax-dim);
+}
+.speed__table thead th {
+  color: var(--wax-faint);
+  font-size: 0.76rem;
+}
+.speed__table tbody th {
+  text-align: left;
+  color: var(--wax);
+  font-family: var(--prose);
+}
+.speed__self {
+  color: var(--flame-hot);
 }
 
-/* ---- CTA band ---------------------------------------------------------- */
-.cta-band {
-  padding: clamp(3rem, 6vw, 5rem) 0;
-  background:
-    radial-gradient(70% 120% at 50% 0%, color-mix(in srgb, var(--flame) 20%, transparent), transparent 65%),
-    var(--surface-2);
-  border-top: 1px solid var(--border);
+/* ---- Install ----------------------------------------------------------- */
+
+.install__cmdline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 56ch;
+  margin-top: 20px;
+  padding: 10px 10px 10px 14px;
+  border: 1px solid var(--ash-2);
+  background: var(--soot-2);
 }
-.cta-band__title {
-  font-family: var(--font-serif);
-  font-weight: 700;
-  color: var(--heading);
-  font-size: clamp(1.9rem, 4vw, 2.7rem);
-  margin-bottom: 0.6rem;
+.install__cmd {
+  flex: 1 1 auto;
+  overflow-x: auto;
+  white-space: nowrap;
+  font-family: var(--term);
+  font-size: 0.85rem;
 }
-.cta-band__lead {
-  color: var(--muted);
-  font-size: 1.1rem;
-  margin-bottom: 1.6rem;
+.install__prompt {
+  color: var(--flame);
+  margin-right: 8px;
+}
+.install__copy {
+  padding: 5px 11px;
+  border: 1px solid var(--ash-2);
+  background: transparent;
+  color: var(--wax-dim);
+  font-family: var(--term);
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+.install__copy:hover {
+  border-color: var(--flame);
+  color: var(--flame);
+}
+.install__note {
+  margin-top: 10px;
+  color: var(--wax-faint);
+  font-size: 0.85rem;
+}
+.install__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
 }
 
-/* ---- Footer ------------------------------------------------------------ */
-.site-footer {
-  background: var(--bg);
-  border-top: 1px solid var(--border);
-  padding: clamp(2.5rem, 5vw, 4rem) 0 2.5rem;
-}
-.site-footer__blurb {
-  color: var(--muted);
-  font-size: 0.95rem;
-  max-width: 34ch;
-}
-.site-footer__h {
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: var(--muted);
-  margin-bottom: 0.9rem;
-}
-.site-footer__links {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.site-footer__links li {
-  margin-bottom: 0.5rem;
-}
-.site-footer__links a {
-  color: var(--text);
-  font-size: 0.95rem;
-}
-.site-footer__links a:hover {
-  color: var(--flame);
+.btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  font-family: var(--term);
+  font-size: 0.85rem;
   text-decoration: none;
 }
-.site-footer__rule {
-  border-color: var(--border);
-  margin: 2rem 0 1.4rem;
+.btn--flame {
+  background: var(--flame);
+  color: var(--soot);
 }
-.site-footer__legal {
-  color: var(--muted);
-  font-size: 0.86rem;
+.btn--flame:hover {
+  background: var(--flame-hot);
+  color: var(--soot);
 }
-.site-footer__legal p {
-  margin-bottom: 0.4rem;
+.btn--quiet {
+  border-color: var(--ash-2);
+  color: var(--wax);
+}
+.btn--quiet:hover {
+  border-color: var(--flame);
+  color: var(--flame-hot);
 }
 
-@media (max-width: 575.98px) {
-  .install {
-    max-width: 100%;
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 26px;
+  margin-top: 44px;
+  padding-top: 18px;
+  border-top: 1px solid var(--ash);
+  color: var(--wax-faint);
+  font-size: 0.84rem;
+}
+
+/* ---- Narrow ------------------------------------------------------------ */
+
+@media (max-width: 820px) {
+  :root {
+    --rail: 60px;
   }
-  .stat-row {
-    gap: 1.1rem;
+  .candle__stick {
+    width: 22px;
+    height: calc(150px - 100px * var(--burnt));
+  }
+  .candle__unit {
+    display: none;
+  }
+  .tour__item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .prompt__hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .candle__tip {
+    animation: none;
+  }
+  * {
+    scroll-behavior: auto !important;
   }
 }

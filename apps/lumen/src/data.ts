@@ -1,7 +1,15 @@
-// Landing content for the Lumen framework. Messaging is drawn from the Lumen
-// site source material and kept to what the framework does today.
+// Landing content for Lumen. The page is laid out as a photometric bench, so
+// the content is organised as stations along that bench: each one sits at a
+// measured distance from the lamp and is lit by it.
 import type { Lang } from "./lib/highlight";
-import { CPP_SDK, PYTHON_SDK, RUST_SDK } from "./generated/examples";
+import {
+  COUNTER_CDL,
+  COUNTER_CSS,
+  COUNTER_LMN,
+  CPP_SDK,
+  PYTHON_SDK,
+  RUST_SDK,
+} from "./generated/examples";
 
 export const REPO_URL = "https://github.com/lumen-fx/lumen";
 export const DOCS_URL = "https://docs.lumenfx.dev/";
@@ -14,104 +22,99 @@ export const BENCH_URL = "https://github.com/lumen-fx/lumen-benchmarks";
 export const INSTALL_CMD = "curl -fsSL https://lumenfx.dev/install.sh | sh";
 
 // The Windows installer, attached to every release.
-export const MSI_URL = "https://github.com/lumen-fx/lumen/releases/latest/download/lumen-windows-x86_64.msi";
+export const MSI_URL =
+  "https://github.com/lumen-fx/lumen/releases/latest/download/lumen-windows-x86_64.msi";
 
-// The hero sample and the three showcase files below are the `counter`
-// template verbatim, so what the page shows is what `lumenc new app counter`
-// writes to disk. The templates live as Rust string constants rather than as
-// files, so they cannot be fetched at build time like the other examples.
-// Source of truth: lumenc/src/scaffold.rs (the COUNTER constant).
-export const HERO_CDL = `import "lumen.cdl";
+// The bench is graduated in centimetres and the stations sit 15 cm apart, so a
+// station's index is also its mark on the ruler. The readout converts pixels of
+// travel back into centimetres with this scale.
+export const CM_PER_STATION = 15;
 
-fn on_ready() {
-    lumen::signal_set_int("clicks", 0);
-
-    get_by_id("bump").on("click", "on_bump");
-    get_by_id("reset").on("click", "on_reset");
+// Every station in order. `id` is the anchor and the ruler label; `caption` is
+// what the lamp readout names when that station is the nearest one.
+export interface StationMeta {
+  id: string;
+  label: string;
+  caption: string;
 }
 
-fn on_bump(ev) {
-    let n = lumen::signal_get_int("clicks");
-    lumen::signal_set_int("clicks", n + 1);
-}
+export const STATIONS: StationMeta[] = [
+  { id: "source", label: "source", caption: "the lamp" },
+  { id: "markup", label: "markup", caption: "widget tree" },
+  { id: "styles", label: "css", caption: "cascade" },
+  { id: "signals", label: "signals", caption: "state" },
+  { id: "reload", label: "reload", caption: "edit loop" },
+  { id: "hosts", label: "hosts", caption: "languages" },
+  { id: "measured", label: "measured", caption: "instruments" },
+  { id: "install", label: "install", caption: "end of bench" },
+];
 
-fn on_reset(ev) {
-    lumen::signal_set_int("clicks", 0);
-}
+// The three files of the `counter` template, split across the markup, css, and
+// signals stations. Markup declares the widgets, CSS themes them from tokens,
+// and candela owns the click handling. All three are read out of the lumen repo
+// at build time, so the page shows what `lumenc new app counter` writes today.
+export const MARKUP_LMN = COUNTER_LMN;
+export const STYLES_CSS = COUNTER_CSS;
+export const SIGNALS_CDL = COUNTER_CDL;
 
-fn main() {}`;
-
-export interface Feature {
-  tag: string;
-  title: string;
+// What a save costs you, station by station. These are properties of how the
+// runtime is built, not measurements, so they are stated in words.
+export interface Reading {
+  key: string;
+  value: string;
   body: string;
 }
 
-export const FEATURES: Feature[] = [
+export const RELOAD_READINGS: Reading[] = [
   {
-    tag: "markup + css",
-    title: "Markup and CSS",
-    body: "Describe an interface as a tree of widgets in .lmn markup, then style it with a CSS cascade you already know: selectors, variables, flexbox, and grid.",
+    key: "markup",
+    value: "tree swaps",
+    body: "The widget tree is rebuilt and diffed against the live one. Ids keep their identity, so a button you were hovering stays the same button.",
   },
   {
-    tag: "signals",
-    title: "Reactive signals",
-    body: "Name a value, bind it to a widget, and the loop closes. Edits flow back into the signal, and derived values flow out to every widget that reads them.",
+    key: "css",
+    value: "restyles",
+    body: "The cascade reruns against the tree already on screen. No relayout of anything the change did not touch.",
   },
   {
-    tag: "hot reload",
-    title: "Hot reload that keeps state",
-    body: "Save any of the three files and the running window updates in place. Focus, scroll position, and signal values survive the swap, so you never lose your place.",
-  },
-  {
-    tag: "gpu paint",
-    title: "Rendered on the GPU",
-    body: "Every frame is composited as vector paths, crisp at any display scale, with full glyph shaping and flexbox and grid layout underneath.",
-  },
-  {
-    tag: "native desktop",
-    title: "Native desktop",
-    body: "One codebase runs on Linux, macOS, and Windows. lumenc compiles and runs your app against the platform's own window system and GPU.",
-  },
-  {
-    tag: "script hosts",
-    title: "Choose your script language",
-    body: "Wire behavior in candela, lua, or rhai. Lumen picks the host from the file extension, so a plugin and your app can each use the language that fits.",
-  },
-  {
-    tag: "ffi + sdks",
-    title: "Drive it from your language",
-    body: "Own the state and event handlers from Rust, C++, or Python instead. A C ABI and a shipped SDK per language put typed signals and native handlers in your host.",
-  },
-  {
-    tag: "a11y + ime",
-    title: "Accessible and global",
-    body: "An accessibility tree, IME composition, and Unicode shaping for mixed left-to-right and right-to-left text come with the runtime.",
+    key: "script",
+    value: "rebinds",
+    body: "Handlers are reregistered against the new source. Signal values survive, so the counter you were at is the counter you come back to.",
   },
 ];
 
-// Scope: what runs now versus what is on the roadmap, kept separate.
-export const SHIPPING: string[] = [
-  "One-line install of the prebuilt lumenc",
-  "Linux, macOS, and Windows desktop",
-  "Hot reload of markup, CSS, and script",
-  "candela, lua, and rhai script hosts",
-  "C ABI with Rust, C++, and Python SDKs",
-  "Accessibility tree, IME, and Unicode BiDi",
-  "Light and dark via prefers-color-scheme",
-  "Virtualized lists and long content",
+// Script hosts. Lumen picks the host from the file extension, so an app and a
+// plugin can each use the language that fits them.
+export interface Host {
+  name: string;
+  ext: string;
+  body: string;
+  href?: string;
+}
+
+export const HOSTS: Host[] = [
+  {
+    name: "candela",
+    ext: ".cdl",
+    body: "Statically typed, compiled to bytecode, and shipped with the toolchain. The default for new apps.",
+    href: CANDELA_URL,
+  },
+  {
+    name: "lua",
+    ext: ".lua",
+    body: "The language your users already know how to write plugins in.",
+  },
+  {
+    name: "rhai",
+    ext: ".rhai",
+    body: "Rust-flavoured and sandboxed, for logic you want close to the host.",
+  },
 ];
 
-export const PLANNED: string[] = [
-  "Web target: the same source to a real DOM",
-  "Plugin dependencies declared in lumen.toml",
-  "Multi-window apps",
-  "Keyframe and spring animation",
-  "Built-in in-window devtools",
-];
-
-// Drive Lumen from a host language: own the state and event handlers instead of
-// scripting them. Each SDK sits on the same C ABI.
+// Drive Lumen from a host language instead of scripting it: own the state and
+// the event handlers. Each SDK sits on the same C ABI, and each sample is the
+// quick start from that SDK's own source, fetched at build time. See
+// scripts/fetch_examples.py.
 export interface Sdk {
   name: string;
   install: string;
@@ -120,8 +123,6 @@ export interface Sdk {
   code: string;
 }
 
-// Each sample is the quick start from the SDK's own source, fetched at build
-// time; see scripts/fetch_examples.py.
 export const SDKS: Sdk[] = [
   {
     name: "Rust",
@@ -143,69 +144,6 @@ export const SDKS: Sdk[] = [
     blurb: "Typed signals with native operators, over the same C ABI.",
     lang: "script",
     code: CPP_SDK,
-  },
-];
-
-export interface Snippet {
-  id: string;
-  label: string;
-  lang: Lang;
-  caption: string;
-  code: string;
-}
-
-// The three files of the `counter` template, verbatim. Markup declares the
-// widgets, CSS themes them from tokens, and candela owns the click handling.
-// Source of truth: lumenc/src/scaffold.rs (the COUNTER constant).
-export const SNIPPETS: Snippet[] = [
-  {
-    id: "markup",
-    label: "main.lmn",
-    lang: "lmn",
-    caption: "Widgets carry ids and classes. bind-text points the label at a signal.",
-    code: `<root bg="#0c1c30" padding="32" gap="20" align="center" justify="center">
-  <label class="display" id="counter" width="100%" height="120px" text="0"
-         bind-text="clicks" />
-  <row gap="14" justify="center">
-    <button class="primary" id="bump"  width="120px" height="48px" text="+1" />
-    <button class="primary" id="reset" width="120px" height="48px" text="reset" />
-  </row>
-  <script src="main.cdl" />
-</root>`,
-  },
-  {
-    id: "styles",
-    label: "main.css",
-    lang: "css",
-    caption: "Tokens on :root, referenced with var(). Familiar selectors and states.",
-    code: `:root {
-  --color-accent:  #5fd9e0;
-  --color-bg:      #163459;
-  --color-hover:   #1d4477;
-  --color-active:  #0e2c52;
-  --color-on-bg:   #ffffff;
-  --radius-pill:   24;
-}
-
-.display { text-align: center; font-size: 96; text-color: var(--color-on-bg); }
-
-.primary {
-  bg:        var(--color-bg);
-  hover-bg:  var(--color-hover);
-  press-bg:  var(--color-active);
-  text-color: var(--color-on-bg);
-  radius:    var(--radius-pill);
-  text-align: center;
-  font-size: 18;
-}
-.primary:focus { outline: 2 var(--color-accent); }`,
-  },
-  {
-    id: "script",
-    label: "main.cdl",
-    lang: "script",
-    caption: "on_ready looks the buttons up and binds their clicks. The label follows the signal.",
-    code: HERO_CDL,
   },
 ];
 
@@ -237,28 +175,22 @@ export const BENCH: BenchRow[] = [
 // Lumen's frame time while scrolling a 10,000-row list at 1000 px/s: it holds a
 // single 60 Hz frame. Percentiles in ms, from the same suite.
 export const FRAME = { p50: "16.5", p95: "17.0", p99: "17.0" };
+export const FRAME_BUDGET = 16.67;
 
-export interface Guarantee {
-  value: string;
-  label: string;
-  body: string;
-}
+// What runs today, and what is next. Kept apart on purpose.
+export const SHIPPING: string[] = [
+  "Linux, macOS, and Windows desktop",
+  "Hot reload of markup, CSS, and script",
+  "candela, lua, and rhai script hosts",
+  "C ABI with Rust, C++, and Python SDKs",
+  "Accessibility tree, IME, and Unicode BiDi",
+  "Virtualized lists and long content",
+  "lumenc web: the same source to a real DOM, in early access",
+];
 
-// Qualitative, from the framework's architecture rather than benchmark dumps.
-export const GUARANTEES: Guarantee[] = [
-  {
-    value: "Next frame",
-    label: "click to paint",
-    body: "An input marks the frame dirty and the very next redraw paints it. Latency is bounded by your display's refresh, with nothing added on top.",
-  },
-  {
-    value: "Idle at rest",
-    label: "cpu when nothing changes",
-    body: "The event loop parks between events. No polling and no background churn, so a window that is doing nothing costs nothing.",
-  },
-  {
-    value: "No restart",
-    label: "save to repaint",
-    body: "Hot reload swaps markup, CSS, or script in place while the app keeps running, so the edit-and-see loop stays tight.",
-  },
+export const PLANNED: string[] = [
+  "Plugin dependencies declared in lumen.toml",
+  "Multi-window apps",
+  "Keyframe and spring animation",
+  "Built-in in-window devtools",
 ];

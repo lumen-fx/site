@@ -2,5 +2,17 @@
 // Each example is a file in the candela repo, read at build time. The
 // comment above a constant is its path there; change it in that repo.
 
-// libs/std/tests/test_list_hof.cdl
-export const LIST_HOF = "/// Checks for the higher-order `list` methods (map/filter/reduce and friends),\n/// exercising both named function references and anonymous functions. Prints\n/// \"list hof ok\" on success; a failed check aborts the run.\nimport \"std/list\" as list;\nimport \"std/assert\" as assert;\n\nfn double(x) {\n    return x * 2;\n}\n\nfn is_even(x) {\n    return x % 2 == 0;\n}\n\nfn main() {\n    let xs = [1, 2, 3, 4];\n\n    // named function reference\n    assert::assert_eq(list::map(xs, double), [2, 4, 6, 8]);\n\n    // anonymous functions\n    assert::assert_eq(list::map(xs, fn(x) { return x * x; }), [1, 4, 9, 16]);\n    assert::assert_eq(list::filter(xs, is_even), [2, 4]);\n    assert::assert_eq(list::filter(xs, fn(x) { return x > 2; }), [3, 4]);\n    assert::assert_eq(list::reduce(xs, 0, fn(a, b) { return a + b; }), 10);\n    assert::assert_eq(list::reduce(xs, 1, fn(a, b) { return a * b; }), 24);\n\n    assert::assert_eq(list::find(xs, is_even), 2);\n    assert::assert_true(list::any(xs, is_even));\n    assert::assert_false(list::all(xs, is_even));\n    assert::assert_true(list::all([2, 4, 6], is_even));\n\n    assert::assert_eq(list::sort_by([3, 1, 2], fn(a, b) { return a < b; }), [1, 2, 3]);\n    assert::assert_eq(list::sort_by([1, 2, 3], fn(a, b) { return a > b; }), [3, 2, 1]);\n\n    // each runs its function for its side effect; anonymous functions do not\n    // capture, so accumulation goes through the list itself.\n    let seen = [];\n    list::each(xs, double);\n    assert::assert_eq(list::map(xs, double), [2, 4, 6, 8]);\n\n    print(\"list hof ok\");\n}";
+// docs/docs/language/methods.md
+export const TOUR_METHODS = "struct Rect {\n    w: int,\n    h: int,\n}\n\nimpl Rect {\n    fn area(self) {\n        return self.w * self.h;\n    }\n\n    fn scaled(self, factor) {\n        return Rect { w: self.w * factor, h: self.h * factor };\n    }\n}\n\nfn main() {\n    let r = Rect { w: 2, h: 3 };\n    print(r.area());\n    print(r.scaled(2).area());\n}";
+
+// docs/docs/language/enums.md
+export const TOUR_ENUMS = "enum Event {\n    Click(int, int),\n    Key(string),\n    Quit,\n}\n\nfn main() {\n    let e = Event::Click(3, 4);\n    match e {\n        Click(x, y) => { print(x + y); }\n        Key(name) => { print(name); }\n        Quit => { print(\"quit\"); }\n    }\n}";
+
+// docs/docs/language/functions.md
+export const TOUR_FUNCTIONS = "fn apply_all(f, xs) {\n    let out = [];\n    for x in xs {\n        out.push(f(x));\n    }\n    return out;\n}\n\nfn twice(x) {\n    return x * 2;\n}\n\nfn main() {\n    print(apply_all(twice, [1, 2, 3]));\n    print(apply_all(fn(v) { return v + 1; }, [1, 2]));\n}";
+
+// docs/docs/language/collections.md
+export const TOUR_MAPS = "fn main() {\n    let ages = {\"ada\": 36, \"alan\": 41};\n    let by_number = {1: \"one\", 2: \"two\"};\n    let empty = {};\n    print(ages.len(), by_number.get(1), empty.len());\n}";
+
+// docs/docs/language/generics.md
+export const TOUR_GENERICS = "struct Cell<T> {\n    value: T,\n}\n\nimpl Cell<T> {\n    fn get(self) -> T {\n        return self.value;\n    }\n}\n\nfn main() {\n    let c = Cell<int>{ value: 3 };\n    print(c.get());\n}";

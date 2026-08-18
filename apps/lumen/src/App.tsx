@@ -1,36 +1,29 @@
-import { NavBar } from "./components/NavBar";
-import { Hero } from "./components/Hero";
-import { Features } from "./components/Features";
-import { Showcase } from "./components/Showcase";
-import { Sdks } from "./components/Sdks";
-import { FeelCallout } from "./components/FeelCallout";
-import { Benchmarks } from "./components/Benchmarks";
-import { CapabilityMatrix } from "./components/CapabilityMatrix";
-import { CtaBand } from "./components/CtaBand";
-import { Footer } from "./components/Footer";
-import { ScrollMeter } from "./components/ScrollMeter";
-import { useTheme } from "./lib/useTheme";
-import { useReveal } from "./lib/useReveal";
+import { Bench } from "./components/Bench";
+import { LumenMark } from "./components/LumenMark";
+import { CANDELA_URL, DOCS_URL, REPO_URL } from "./data";
 
 export function App() {
-  const [theme, toggleTheme] = useTheme();
-  useReveal();
-
   return (
     <>
-      <ScrollMeter />
-      <NavBar theme={theme} onToggleTheme={toggleTheme} />
+      <a className="skip" href="#station-install">
+        Skip to the end of the bench
+      </a>
+
+      <header className="topbar">
+        <a className="topbar__brand" href="#station-source">
+          <LumenMark size={20} />
+          <span>Lumen</span>
+        </a>
+        <nav className="topbar__links" aria-label="Elsewhere">
+          <a href={DOCS_URL}>Docs</a>
+          <a href={CANDELA_URL}>candela</a>
+          <a href={REPO_URL}>GitHub</a>
+        </nav>
+      </header>
+
       <main>
-        <Hero />
-        <Features />
-        <Showcase />
-        <Sdks />
-        <FeelCallout />
-        <Benchmarks />
-        <CapabilityMatrix />
-        <CtaBand />
+        <Bench />
       </main>
-      <Footer />
     </>
   );
 }
