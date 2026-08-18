@@ -15,9 +15,17 @@ export function Runtime() {
         The runtime behind that prompt
       </h2>
       <p className="runtime__lede">
-        The prompt loaded candela compiled to WebAssembly: {megabytes(WASM_BYTES)} of compiler
-        and virtual machine, fetched once. Installed, the two are separable, and only the
-        virtual machine has to ship with a program.
+        {WASM_BYTES > 0 ? (
+          <>
+            The prompt loaded candela compiled to WebAssembly: {megabytes(WASM_BYTES)} of
+            compiler and virtual machine, fetched once.
+          </>
+        ) : (
+          <>The prompt runs candela compiled to WebAssembly: the compiler and the virtual
+          machine, fetched once.</>
+        )}{" "}
+        Installed, the two are separable, and only the virtual machine has to ship with a
+        program.
       </p>
 
       <dl className="runtime__facts">
