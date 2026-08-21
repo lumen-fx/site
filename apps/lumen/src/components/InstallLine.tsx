@@ -2,7 +2,7 @@ import { useState } from "react";
 import { INSTALL_CMD } from "../data";
 
 // The one-line install, with a copy control. It appears at both ends of the
-// bench: at the lamp, where someone decides, and at the far end, where someone
+// page: at the source, where someone decides, and past red, where someone
 // who read the whole thing decides.
 export function InstallLine() {
   const [copied, setCopied] = useState(false);

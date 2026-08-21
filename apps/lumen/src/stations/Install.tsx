@@ -11,12 +11,13 @@ import {
   SHIPPING,
 } from "../data";
 
-// The end of the bench: everything needed to start, and what is not here yet.
+// The red end of the spectrum: everything needed to start, and what is not
+// here yet.
 export function Install() {
   return (
     <Station
       index={7}
-      title="Take it off the bench."
+      title="Take it with you."
       lede="One command installs the prebuilt toolchain. lumenc new writes a project, lumenc run opens it, and the docs cover the rest."
       wide
     >

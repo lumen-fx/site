@@ -1,6 +1,6 @@
-// Landing content for Lumen. The page is laid out as a photometric bench, so
-// the content is organised as stations along that bench: each one sits at a
-// measured distance from the lamp and is lit by it.
+// Landing content for Lumen. The page is laid out as a dispersion experiment:
+// white light enters a prism at the top, and each content station after it
+// takes one band of the spectrum, violet through red.
 import type { Lang } from "./lib/highlight";
 import {
   COUNTER_CDL,
@@ -25,28 +25,26 @@ export const INSTALL_CMD = "curl -fsSL https://lumenfx.dev/install.sh | sh";
 export const MSI_URL =
   "https://github.com/lumen-fx/lumen/releases/latest/download/lumen-windows-x86_64.msi";
 
-// The bench is graduated in centimetres and the stations sit 15 cm apart, so a
-// station's index is also its mark on the ruler. The readout converts pixels of
-// travel back into centimetres with this scale.
-export const CM_PER_STATION = 15;
-
-// Every station in order. `id` is the anchor and the ruler label; `caption` is
-// what the lamp readout names when that station is the nearest one.
+// Every station in order. `id` is the anchor and the rail label. `nm` is the
+// station's band on the spectrum (the source is white light and has none), and
+// `hue` is that band rendered as a screen colour, tuned to stay readable on
+// the dark ground rather than to be colorimetrically exact.
 export interface StationMeta {
   id: string;
   label: string;
-  caption: string;
+  nm?: number;
+  hue: string;
 }
 
 export const STATIONS: StationMeta[] = [
-  { id: "source", label: "source", caption: "the lamp" },
-  { id: "markup", label: "markup", caption: "widget tree" },
-  { id: "styles", label: "css", caption: "cascade" },
-  { id: "signals", label: "signals", caption: "state" },
-  { id: "reload", label: "reload", caption: "edit loop" },
-  { id: "hosts", label: "hosts", caption: "languages" },
-  { id: "measured", label: "measured", caption: "instruments" },
-  { id: "install", label: "install", caption: "end of bench" },
+  { id: "source", label: "source", hue: "#eceef2" },
+  { id: "markup", label: "markup", nm: 432, hue: "#8b7bff" },
+  { id: "styles", label: "css", nm: 474, hue: "#5aa2ff" },
+  { id: "signals", label: "signals", nm: 517, hue: "#58dd8e" },
+  { id: "reload", label: "reload", nm: 555, hue: "#a8e05f" },
+  { id: "hosts", label: "hosts", nm: 598, hue: "#ffc95f" },
+  { id: "measured", label: "measured", nm: 640, hue: "#ff8f5c" },
+  { id: "install", label: "install", nm: 682, hue: "#ff6b6b" },
 ];
 
 // The three files of the `counter` template, split across the markup, css, and

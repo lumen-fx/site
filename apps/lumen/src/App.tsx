@@ -1,13 +1,25 @@
-import { Bench } from "./components/Bench";
+import { ExplodedDemo } from "./components/ExplodedDemo";
 import { LumenMark } from "./components/LumenMark";
+import { PrismCanvas } from "./components/PrismCanvas";
+import { SpectrumRail } from "./components/SpectrumRail";
 import { CANDELA_URL, DOCS_URL, REPO_URL } from "./data";
+import { Hosts } from "./stations/Hosts";
+import { Install } from "./stations/Install";
+import { Markup } from "./stations/Markup";
+import { Measured } from "./stations/Measured";
+import { Reload } from "./stations/Reload";
+import { Signals } from "./stations/Signals";
+import { Source } from "./stations/Source";
+import { Styles } from "./stations/Styles";
 
 export function App() {
   return (
     <>
       <a className="skip" href="#station-install">
-        Skip to the end of the bench
+        Skip to the install station
       </a>
+
+      <PrismCanvas />
 
       <header className="topbar">
         <a className="topbar__brand" href="#station-source">
@@ -21,8 +33,19 @@ export function App() {
         </nav>
       </header>
 
+      <SpectrumRail />
+
       <main>
-        <Bench />
+        <Source />
+        <ExplodedDemo>
+          <Markup />
+          <Styles />
+          <Signals />
+        </ExplodedDemo>
+        <Reload />
+        <Hosts />
+        <Measured />
+        <Install />
       </main>
     </>
   );
