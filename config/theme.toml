@@ -17,9 +17,11 @@
 # ----------------------------------------------------------------------------
 [project.theme]
 
-# Logos are not finalized. The header falls back to the site_name text
-# wordmark. TODO: set `logo` to a final asset once branding lands.
-favicon = "images/favicon.svg"
+# The Lumen mark, shared with the landing (apps/lumen/public/lumen-logo.svg).
+# The README still calls the marks placeholders; when branding lands, replace
+# the asset, not these keys.
+logo = "images/lumen-logo.svg"
+favicon = "images/lumen-logo.svg"
 language = "en"
 
 features = [
