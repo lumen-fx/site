@@ -1,12 +1,10 @@
-import type { ReactNode } from "react";
-import { CM_PER_STATION, STATIONS } from "../data";
+import type { CSSProperties, ReactNode } from "react";
+import { STATIONS } from "../data";
 
-// One position on the bench. The mark in the corner is its distance from the
-// lamp, so the reader can place what they are looking at on the ruler below.
-//
-// Brightness arrives as the --e custom property, written by the bench on every
-// frame. Content is never hidden: a dim station is still in the document, still
-// reachable, and lights up when it takes focus.
+// One band of the spectrum. The mark in the margin is the station's
+// wavelength, so the reader can place it on the rail at the right edge. The
+// band's hue arrives as --acc and colours the eyebrow, panel edges, and
+// anything else the stylesheet keys off it.
 export function Station({
   index,
   title,
@@ -28,17 +26,22 @@ export function Station({
       className={wide ? "station station--wide" : "station"}
       id={`station-${meta.id}`}
       aria-labelledby={headingId}
+      style={{ "--acc": meta.hue } as CSSProperties}
     >
       <p className="station__mark">
-        <span className="station__cm">{index * CM_PER_STATION} cm</span>
+        <span className="station__nm" aria-label={`${meta.nm} nanometres`}>
+          {"λ"} {meta.nm}
+          <small> nm</small>
+        </span>
         <span className="station__name">{meta.label}</span>
-        <span className="station__rule" aria-hidden="true" />
       </p>
-      <h2 className="station__title" id={headingId}>
-        {title}
-      </h2>
-      {lede ? <p className="station__lede">{lede}</p> : null}
-      <div className="station__body">{children}</div>
+      <div className="station__body">
+        <h2 className="station__title" id={headingId}>
+          {title}
+        </h2>
+        {lede ? <p className="station__lede">{lede}</p> : null}
+        {children}
+      </div>
     </section>
   );
 }

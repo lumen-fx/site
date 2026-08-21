@@ -1,625 +1,481 @@
-/*
- * The Lumen landing.
+/* Lumen landing: a dispersion experiment.
  *
- * The page is a photometric bench: one lamp holds position at the left of the
- * screen and the content travels past it on a rail, lit by inverse-square
- * falloff, with a graduated ruler along the bottom edge. There is one ground
- * (graphite), one accent (the instrument cyan from the logo), and otherwise
- * only luminance, because a page about light should not be arguing with a
- * second hue.
+ * One fixed WebGL pass draws white light entering a prism and a spectral fan
+ * leaving it. The content is a column of stations, each owning one band of
+ * that fan: the band's wavelength is the mark in the margin, and its hue
+ * arrives on the section as --acc and colours everything that needs an
+ * accent. The ground stays near-black throughout; colour is spent only on
+ * the spectrum.
  *
- * Dark only, on purpose: falloff is the whole idea and it needs a dark room.
- *
- * Bootstrap supplies the reset. Everything visual lives here.
+ * Rules kept from the previous design: dark only, one ground, content
+ * readable at any brightness, and prefers-reduced-motion turns every moving
+ * part off.
  */
 
+/* ---------- fonts ---------- */
+
 @font-face {
-  font-family: "Instrument Sans";
-  src: url("/fonts/instrument-sans-latin.woff2") format("woff2");
-  font-weight: 400 700;
+  font-family: "Sora";
   font-style: normal;
+  font-weight: 100 800;
+  src: url("/fonts/sora-latin.woff2") format("woff2");
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/fonts/ibm-plex-mono-latin-400.woff2") format("woff2");
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  src: url("/fonts/ibm-plex-mono-latin-500.woff2") format("woff2");
   font-display: swap;
 }
 
-@font-face {
-  font-family: "Martian Mono";
-  src: url("/fonts/martian-mono-latin.woff2") format("woff2");
-  font-weight: 300 700;
-  font-style: normal;
-  font-display: swap;
-}
+/* ---------- tokens ---------- */
 
 :root {
-  /* Instrument Sans sets the page; Martian Mono is reserved for anything that
-     reads as an instrument marking: readouts, ticks, station labels. Code stays
-     on the system mono, which is narrower and keeps a sample on one line. */
-  --font-sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-inst: "Martian Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --font-code: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
-
-  --ink: #0a0b0d;
-  --panel: #0f1216;
-  --panel-2: #12161b;
-  --line: #1e242c;
-  --line-2: #2b323c;
-
-  --text: #e9e8e3;
+  --void: #07080b;
+  --text: #eceef2;
   --dim: #969ca4;
-  --faint: #565d67;
+  --faint: #5b626c;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-2: rgba(255, 255, 255, 0.14);
+  --glass: rgba(255, 255, 255, 0.025);
+  --acc: #eceef2;
 
-  --signal: #2fd6cf;
-  --signal-hot: #6ff0ea;
-  --signal-dim: rgba(47, 214, 207, 0.14);
-  --signal-line: rgba(47, 214, 207, 0.34);
-
-  --code-bg: #0b0e12;
-  --code-line: #171c22;
-  --code-text: #d7dbe0;
-  --tok-comment: #565d67;
+  --tok-comment: #5b626c;
   --tok-string: #86e6df;
   --tok-number: #d9c48a;
   --tok-keyword: #7fb2ff;
-  --tok-tag: #2fd6cf;
+  --tok-tag: #9d8fff;
   --tok-attr: #9aa7b4;
   --tok-prop: #9aa7b4;
   --tok-fn: #cfe3e6;
 
-  --topbar-h: 56px;
-  /* The instrument column: lamp, readout, and the ruler beside them. */
-  --rail-w: 178px;
-  --maxw: 1240px;
+  --font-sans: "Sora", system-ui, sans-serif;
+  --font-inst: "IBM Plex Mono", ui-monospace, monospace;
+  --font-code: ui-monospace, "Cascadia Mono", "JetBrains Mono", Menlo, monospace;
 
-  color-scheme: dark;
+  --topbar-h: 56px;
+  --maxw: 1240px;
 }
 
+/* ---------- reset and ground ---------- */
+
 * {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
 }
-
-/* No scrollbar chrome anywhere. The page keeps its own indicators: the ruler
-   says where you are on the bench, and a code panel scrolls under the pointer
-   like the rest of the page. Scrolling itself is untouched. */
-* {
+html {
+  scroll-behavior: smooth;
+  /* the spectrum rail is the scroll indicator; the browser bar is noise */
   scrollbar-width: none;
 }
-*::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.code-block__pre::-webkit-scrollbar,
+.install__cmd::-webkit-scrollbar {
+  display: none;
 }
-
+.code-block__pre,
+.install__cmd {
+  scrollbar-width: none;
+}
 body {
-  margin: 0;
-  background: var(--ink);
+  background: var(--void);
   color: var(--text);
   font-family: var(--font-sans);
+  font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  overflow-x: hidden;
 }
-
+img {
+  max-width: 100%;
+}
 a {
-  color: var(--signal);
-  text-decoration-color: var(--signal-line);
+  color: var(--text);
+  text-decoration-color: var(--faint);
   text-underline-offset: 3px;
 }
 a:hover {
-  color: var(--signal-hot);
+  text-decoration-color: var(--acc);
 }
-
+::selection {
+  background: rgba(127, 178, 255, 0.25);
+}
 :focus-visible {
-  outline: 2px solid var(--signal-hot);
-  outline-offset: 3px;
-  border-radius: 3px;
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
 }
-
-h1,
-h2,
-h3 {
-  margin: 0;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.12;
-}
-
-p {
-  margin: 0;
+button {
+  font: inherit;
+  color: inherit;
 }
 
 .skip {
   position: fixed;
-  top: 8px;
-  left: 8px;
-  z-index: 40;
-  padding: 8px 14px;
-  background: var(--signal);
-  color: #04100f;
-  border-radius: 6px;
-  font-family: var(--font-inst);
-  font-size: 0.72rem;
-  transform: translateY(-200%);
+  top: -48px;
+  left: 16px;
+  z-index: 100;
+  background: var(--void);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  padding: 10px 16px;
+  transition: top 0.15s;
 }
 .skip:focus {
-  transform: none;
+  top: 12px;
 }
 
-/* ---- Top bar ----------------------------------------------------------- */
+/* ---------- the light source ---------- */
+
+.prism {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  display: block;
+  /* the ground a machine without WebGL gets */
+  background: radial-gradient(120% 90% at 70% 40%, #0d1118 0%, #07080b 60%);
+}
+
+/* ---------- topbar ---------- */
 
 .topbar {
   position: fixed;
-  inset: 0 0 auto 0;
-  z-index: 30;
-  height: var(--topbar-h);
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 0 clamp(16px, 3vw, 34px);
-  border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--ink) 86%, transparent);
-  backdrop-filter: blur(8px);
+  gap: 28px;
+  height: var(--topbar-h);
+  padding: 0 36px;
+  font-family: var(--font-inst);
+  font-size: 13px;
+  background: linear-gradient(rgba(7, 8, 11, 0.85), transparent);
 }
-
 .topbar__brand {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: var(--text);
+  font-weight: 500;
+  letter-spacing: 0.14em;
   text-decoration: none;
-  font-weight: 600;
-  letter-spacing: 0.02em;
 }
-
 .topbar__links {
+  margin-left: auto;
   display: flex;
-  gap: clamp(14px, 2vw, 26px);
-  font-family: var(--font-inst);
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
+  gap: 22px;
 }
 .topbar__links a {
   color: var(--dim);
   text-decoration: none;
 }
 .topbar__links a:hover {
-  color: var(--signal);
+  color: var(--text);
 }
-
-/* ---- The bench --------------------------------------------------------- */
-
-/* The instrument column stands on the left and stays put; the stations scroll
-   past it. Nothing here intercepts scrolling. */
-.bench {
-  display: grid;
-  grid-template-columns: var(--rail-w) minmax(0, 1fr);
-  gap: clamp(20px, 3vw, 46px);
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: calc(var(--topbar-h) + 26px) clamp(18px, 3vw, 40px) 90px;
-}
-
-.bench__instrument {
-  position: sticky;
-  top: calc(var(--topbar-h) + 26px);
-  align-self: start;
-  height: calc(100dvh - var(--topbar-h) - 60px);
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-
-.bench__stations {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(26px, 4vw, 54px);
-}
-
-/* ---- The lamp ---------------------------------------------------------- */
-
-.lamp {
-  position: relative;
-  flex: 0 0 auto;
-}
-
-/* The pull cord. It hangs off the housing, stretches under a drag, and springs
-   back when let go. --pull is written by the drag. */
-.cord {
-  position: absolute;
-  top: 38px;
-  left: calc(50% + 26px);
-  width: 24px;
-  height: calc(56px + var(--pull, 0px));
-  padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: grab;
-  touch-action: none;
-}
-.cord--pulling {
-  cursor: grabbing;
-}
-.cord__line {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 1px;
-  height: calc(100% - 9px);
-  background: var(--line-2);
-}
-.cord__bead {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 9px;
-  height: 9px;
-  margin-left: -4.5px;
-  border-radius: 50%;
-  background: var(--dim);
-  box-shadow: 0 0 0 1px var(--ink);
-}
-.cord:hover .cord__bead,
-.cord:focus-visible .cord__bead {
-  background: var(--signal);
-}
-.cord:not(.cord--pulling) {
-  transition: height 260ms cubic-bezier(0.2, 1.6, 0.4, 1);
-}
-
-/* Lamp off: the filament dies, the bloom goes, and the readout reads nothing,
-   because there is nothing to read. */
-.lamp--out .lamp__core {
-  fill: var(--line-2);
-}
-.lamp--out .lamp__filament {
-  stroke: var(--faint);
-}
-.lamp--out .lamp__bloom {
-  fill: transparent;
-}
-.lamp--out .lamp__label {
-  color: var(--faint);
-}
-.lamp--out .readout dd {
-  color: var(--faint);
-}
-.lamp--out .readout__fill {
-  background: var(--line-2);
-}
-
-/* With the lamp out the room is flat: the light-cone edge on every station
-   goes, and the ruler stops claiming a station is lit. */
-.bench--dark .station {
-  border-left-color: var(--line);
-}
-.bench--dark .ruler__cursor {
-  background: var(--line-2);
-  box-shadow: none;
-}
-.bench--dark .ruler__go[aria-current="true"] .ruler__name,
-.bench--dark .ruler__go[aria-current="true"] .ruler__cm {
-  color: var(--dim);
-}
-.bench--dark .ruler__go[aria-current="true"] .ruler__tick {
-  background: var(--line-2);
-}
-
-.lamp__housing {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
-.lamp__glass {
-  width: 72px;
-  height: 72px;
-  overflow: visible;
-}
-.lamp__bloom {
-  fill: rgba(111, 240, 234, 0.07);
-}
-.lamp__ring {
-  fill: none;
-  stroke: var(--line-2);
-  stroke-width: 1;
-}
-.lamp__core {
-  fill: #ffffff;
-}
-.lamp__filament {
-  fill: none;
-  stroke: var(--signal-hot);
-  stroke-width: 1.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: 0.9;
-}
-
-.lamp__label,
-.readout {
-  font-family: var(--font-inst);
-  font-size: 0.63rem;
-  letter-spacing: 0.05em;
-  text-transform: lowercase;
-}
-
-.lamp__label {
-  color: var(--faint);
-  font-size: 0.58rem;
-}
-
-.readout {
-  margin: 16px 0 0;
-  padding: 12px 12px 11px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--panel) 82%, transparent);
-  color: var(--dim);
-}
-
-.readout__row {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  white-space: nowrap;
-}
-.readout dt {
-  color: var(--faint);
-  font-weight: 400;
-}
-.readout dd {
-  margin: 0;
-  color: var(--signal);
-}
-
-.readout__meter {
-  margin-top: 8px;
-  height: 3px;
-  background: var(--line);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.readout__fill {
+.lumen-mark {
   display: block;
-  height: 100%;
-  width: 100%;
-  background: linear-gradient(90deg, var(--signal), var(--signal-hot));
 }
 
-/* ---- A station --------------------------------------------------------- */
+/* ---------- spectrum rail ---------- */
+
+.rail {
+  position: fixed;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 44vh;
+  width: 2px;
+  z-index: 10;
+  background: linear-gradient(
+    #8b7bff,
+    #5aa2ff 25%,
+    #58dd8e 39%,
+    #a8e05f 52%,
+    #ffc95f 66%,
+    #ff8f5c 80%,
+    #ff6b6b
+  );
+  border-radius: 1px;
+}
+.rail__tick {
+  position: absolute;
+  right: -5px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  flex-direction: row-reverse;
+  gap: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+.rail__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px var(--void);
+  transition: transform 0.2s;
+}
+.rail__tick--on .rail__dot {
+  transform: scale(1.5);
+  box-shadow:
+    0 0 0 3px var(--void),
+    0 0 12px currentColor;
+}
+.rail__name {
+  font-family: var(--font-inst);
+  font-size: 11px;
+  color: currentColor;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.rail__tick:hover .rail__name,
+.rail__tick--on .rail__name,
+.rail__tick:focus-visible .rail__name {
+  opacity: 1;
+}
+
+/* ---------- stations ---------- */
+
+main {
+  position: relative;
+  z-index: 1;
+}
 
 .station {
-  --e: 1;
-  position: relative;
-  scroll-margin-top: calc(var(--topbar-h) + 20px);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: clamp(20px, 2vw, 30px) clamp(18px, 2.2vw, 32px) clamp(22px, 2.4vw, 34px);
-  border-left: 1px solid rgba(47, 214, 207, calc(0.08 + 0.42 * var(--e)));
-  border-radius: 0 14px 14px 0;
-  background:
-    radial-gradient(
-      90% 120% at -4% 50%,
-      rgba(90, 210, 225, calc(0.1 * var(--e))),
-      transparent 56%
-    ),
-    color-mix(in srgb, var(--panel) calc(30% + 55% * var(--e)), transparent);
-  /* The floor is high on purpose: a station away from the lamp is cooler, not
-     hidden. The page stays skimmable, searchable, and readable out of order. */
-  color: color-mix(in srgb, var(--text) calc(62% + 38% * var(--e)), var(--faint));
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 16vh 36px;
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  gap: 44px;
+  scroll-margin-top: 32px;
 }
-
 .station__mark {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   font-family: var(--font-inst);
-  font-size: 0.6rem;
-  letter-spacing: 0.08em;
-  color: var(--faint);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--acc);
+  align-self: start;
+  position: sticky;
+  top: 96px;
 }
-.station__cm {
-  color: var(--signal);
-}
-.station__rule {
-  flex: 1 1 auto;
-  height: 1px;
-  background: linear-gradient(90deg, var(--line-2), transparent);
-}
-
-.station__title {
-  font-size: clamp(1.5rem, 2.5vw, 2.15rem);
-  max-width: 22ch;
-}
-
-.station__lede {
-  max-width: 62ch;
-  color: var(--dim);
-  font-size: 1rem;
-}
-
-.station__body {
-  min-height: 0;
-  display: flex;
-  gap: clamp(18px, 2.4vw, 34px);
-  align-items: start;
-}
-.station--wide .station__body {
+.station__nm {
   display: block;
+  font-size: 21px;
+  font-weight: 500;
+  letter-spacing: 0;
 }
-
+.station__nm small {
+  font-size: 12px;
+  color: var(--dim);
+}
+.station__name {
+  display: block;
+  margin-top: 8px;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 11px;
+}
+.station__title {
+  font-size: clamp(26px, 3vw, 40px);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+  max-width: 24ch;
+}
+.station__lede {
+  color: var(--dim);
+  margin-top: 16px;
+  max-width: 62ch;
+}
 .station__aside {
-  color: var(--faint);
-  font-size: 0.85rem;
+  color: var(--dim);
+  margin-top: 26px;
+  max-width: 62ch;
+  border-left: 2px solid var(--line-2);
+  padding-left: 16px;
+  font-size: 15px;
 }
 
-/* The hero sits at the lamp and carries no second column. */
+/* ---------- source (hero) ---------- */
+
 .station--source {
-  gap: 12px;
+  min-height: 100vh;
+  align-content: end;
+  padding-top: calc(var(--topbar-h) + 32px);
+  padding-bottom: 12vh;
+}
+.station--source .station__mark {
+  position: static;
 }
 .source__brand {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
   font-family: var(--font-inst);
-  letter-spacing: 0.04em;
-}
-.source__word {
-  font-size: 0.9rem;
+  letter-spacing: 0.18em;
+  font-weight: 500;
+  margin-bottom: 22px;
 }
 .source__title {
-  font-size: clamp(2rem, 4.2vw, 3.4rem);
-  max-width: 17ch;
-  background: linear-gradient(100deg, #ffffff 24%, #97a0a8 96%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  font-size: clamp(34px, 4.8vw, 66px);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  max-width: 15ch;
 }
 .source__lede {
-  max-width: 56ch;
   color: var(--dim);
-  font-size: clamp(1rem, 1.2vw, 1.1rem);
+  max-width: 58ch;
+  margin: 22px 0 34px;
 }
-.source__note,
-.ending__note {
-  color: var(--faint);
-  font-size: 0.8rem;
+.source__note {
+  color: var(--dim);
+  font-size: 14px;
+  margin-top: 14px;
   max-width: 52ch;
 }
-.source__cta,
-.ending__links {
+.source__cta {
   display: flex;
+  gap: 14px;
+  margin-top: 26px;
   flex-wrap: wrap;
-  gap: 10px;
 }
 .source__hint {
-  margin-top: 4px;
+  margin-top: 56px;
   font-family: var(--font-inst);
-  font-size: 0.58rem;
-  letter-spacing: 0.16em;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
   color: var(--faint);
 }
 
-/* ---- Buttons and the install line -------------------------------------- */
-
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 11px 20px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  font-size: 0.92rem;
-  font-weight: 600;
+  display: inline-block;
+  font-family: var(--font-inst);
+  font-size: 14px;
   text-decoration: none;
+  border-radius: 8px;
+  padding: 11px 20px;
+  border: 1px solid var(--line-2);
 }
 .btn--lit {
-  background: var(--signal);
-  color: #04100f;
+  background: var(--text);
+  color: var(--void);
+  border-color: var(--text);
 }
 .btn--lit:hover {
-  background: var(--signal-hot);
-  color: #04100f;
+  background: #fff;
 }
 .btn--quiet {
-  border-color: var(--line-2);
-  color: var(--text);
+  color: var(--dim);
 }
 .btn--quiet:hover {
-  border-color: var(--signal-line);
-  color: var(--signal-hot);
+  color: var(--text);
+  border-color: var(--dim);
 }
 
+/* ---------- install line ---------- */
+
 .install {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  max-width: 52ch;
-  padding: 9px 9px 9px 13px;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  background: var(--code-bg);
+  gap: 16px;
+  font-family: var(--font-inst);
+  font-size: 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  padding: 12px 16px;
+  background: var(--glass);
+  backdrop-filter: blur(6px);
+  max-width: 100%;
 }
 .install__cmd {
-  flex: 1 1 auto;
-  font-family: var(--font-code);
-  font-size: 0.82rem;
-  color: var(--code-text);
+  font-family: inherit;
   overflow-x: auto;
   white-space: nowrap;
 }
 .install__prompt {
-  color: var(--signal);
-  margin-right: 6px;
+  color: var(--acc);
+  margin-right: 4px;
+}
+.station--source .install__prompt {
+  color: #86e6df;
 }
 .install__copy {
-  flex: 0 0 auto;
-  padding: 6px 11px;
-  border: 1px solid var(--line-2);
+  background: none;
+  border: 1px solid var(--line);
   border-radius: 6px;
-  background: transparent;
-  color: var(--dim);
+  padding: 5px 12px;
   font-family: var(--font-inst);
-  font-size: 0.58rem;
-  letter-spacing: 0.08em;
+  font-size: 12px;
+  color: var(--dim);
   cursor: pointer;
 }
 .install__copy:hover {
-  border-color: var(--signal-line);
-  color: var(--signal);
+  color: var(--text);
+  border-color: var(--dim);
 }
 
-/* ---- Code -------------------------------------------------------------- */
+/* ---------- code blocks and notes ---------- */
 
 .code-block {
-  min-width: 0;
-  flex: 1 1 auto;
-  border: 1px solid var(--code-line);
+  margin-top: 28px;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--acc);
   border-radius: 10px;
-  background: var(--code-bg);
+  background: var(--glass);
+  backdrop-filter: blur(8px);
   overflow: hidden;
+  box-shadow: 0 0 70px -40px var(--acc);
 }
 .code-block__bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 11px;
-  border-bottom: 1px solid var(--code-line);
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--line);
   font-family: var(--font-inst);
-  font-size: 0.56rem;
-  letter-spacing: 0.08em;
-  color: var(--faint);
+  font-size: 12px;
+  color: var(--dim);
 }
 .code-block__copy {
-  padding: 3px 9px;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  background: transparent;
+  background: none;
+  border: none;
   color: var(--faint);
-  font: inherit;
+  font-family: var(--font-inst);
+  font-size: 12px;
   cursor: pointer;
 }
 .code-block__copy:hover {
-  border-color: var(--signal-line);
-  color: var(--signal);
+  color: var(--text);
 }
 .code-block__pre {
-  margin: 0;
-  padding: 14px 15px;
-  max-height: 46vh;
-  overflow: auto;
+  padding: 18px 20px;
+  overflow-x: auto;
   font-family: var(--font-code);
-  font-size: 0.79rem;
-  line-height: 1.62;
-  color: var(--code-text);
-  tab-size: 2;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--dim);
 }
 
 .tok-comment {
   color: var(--tok-comment);
-  font-style: italic;
 }
 .tok-string {
   color: var(--tok-string);
@@ -641,186 +497,391 @@ p {
   color: var(--tok-attr);
 }
 
-/* ---- Notes beside a sample --------------------------------------------- */
-
 .notes {
-  flex: 0 0 clamp(230px, 24%, 320px);
-  margin: 0;
-  padding: 0;
   list-style: none;
-  display: flex;
-  flex-direction: column;
+  margin-top: 26px;
+  display: grid;
   gap: 14px;
 }
 .notes li {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding-left: 12px;
-  border-left: 1px solid var(--line-2);
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 18px;
+  font-size: 14.5px;
 }
 .notes__key {
   font-family: var(--font-inst);
-  font-size: 0.58rem;
-  letter-spacing: 0.06em;
-  color: var(--signal);
+  font-size: 13px;
+  color: var(--acc);
 }
 .notes__body {
-  font-size: 0.84rem;
   color: var(--dim);
 }
 
-/* ---- Hot reload -------------------------------------------------------- */
+/* ---------- exploded-window demo ---------- */
+
+.demo {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 36px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 28vw, 390px);
+  gap: 56px;
+  --p: 0;
+  --pi: calc(1 - var(--p));
+}
+.demo .station {
+  padding-left: 0;
+  padding-right: 0;
+  max-width: none;
+}
+.demo__scene {
+  position: relative;
+}
+.demo__stick {
+  position: sticky;
+  top: calc(50vh - 220px);
+  perspective: 1500px;
+}
+.assembly {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 11 / 8;
+  transform-style: preserve-3d;
+  transform: rotateX(calc(var(--pi) * 52deg)) rotateZ(calc(var(--pi) * -36deg));
+}
+.layer {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  border: 1px solid var(--line-2);
+  background: rgba(13, 17, 24, 0.72);
+  backdrop-filter: blur(4px);
+  transform: translateZ(calc(var(--z) * var(--pi)));
+  --fade: clamp(0.001, calc((0.88 - var(--p)) * 9), 1);
+  opacity: calc(var(--fade) * var(--hl, 0.6));
+  padding: 38px 18px 14px;
+  overflow: hidden;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.layer__tab {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-family: var(--font-inst);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--dim);
+  background: var(--void);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0 0 8px 0;
+  padding: 5px 12px;
+}
+.layer__code {
+  font-family: var(--font-code);
+  font-size: 10.5px;
+  line-height: 1.7;
+  color: var(--dim);
+  overflow: hidden;
+}
+.layer__readout {
+  font-family: var(--font-inst);
+  font-size: 12px;
+  color: #58dd8e;
+  margin-bottom: 8px;
+}
+.layer--markup {
+  --z: 150px;
+}
+.layer--css {
+  --z: 50px;
+}
+.layer--signals {
+  --z: -50px;
+}
+.layer--paint {
+  --z: -150px;
+  padding: 0;
+}
+.layer--paint canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  border-radius: 12px;
+  opacity: 0.9;
+}
+.layer--paint .layer__tab {
+  z-index: 1;
+}
+
+.demo[data-step="0"] .layer--markup,
+.demo[data-step="1"] .layer--css,
+.demo[data-step="2"] .layer--signals {
+  --hl: 1;
+  border-color: var(--lacc);
+  box-shadow: 0 0 60px -30px var(--lacc);
+}
+.demo[data-step="0"] .layer--markup .layer__tab,
+.demo[data-step="1"] .layer--css .layer__tab,
+.demo[data-step="2"] .layer--signals .layer__tab {
+  color: var(--lacc);
+}
+.layer--markup {
+  --lacc: #8b7bff;
+}
+.layer--css {
+  --lacc: #5aa2ff;
+}
+.layer--signals {
+  --lacc: #58dd8e;
+}
+
+.window {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: #0c1c30;
+  border: 1px solid #1d3a5f;
+  box-shadow:
+    0 30px 80px -20px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(95, 217, 224, 0.12);
+  opacity: clamp(0.001, calc((var(--p) - 0.82) * 7), 1);
+  display: flex;
+  flex-direction: column;
+  transform: translateZ(1px);
+  pointer-events: none;
+}
+.demo[data-assembled="true"] .window {
+  pointer-events: auto;
+}
+.window__bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #1d3a5f;
+  font-family: var(--font-inst);
+  font-size: 11px;
+  color: #92a8c3;
+}
+.window__bar i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #1d3a5f;
+}
+.window__bar span {
+  margin-left: 8px;
+}
+.window__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.window__display {
+  font-size: clamp(48px, 6vw, 76px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+}
+.window__row {
+  display: flex;
+  gap: 14px;
+}
+.window__row button {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: #ffffff;
+  background: #163459;
+  border: none;
+  border-radius: 24px;
+  width: 104px;
+  height: 42px;
+  cursor: pointer;
+}
+.window__row button:hover {
+  background: #1d4477;
+}
+.window__row button:active {
+  background: #0e2c52;
+}
+.window__row button:focus-visible {
+  outline: 2px solid #5fd9e0;
+  outline-offset: 2px;
+}
+
+.demo__caption {
+  margin-top: 18px;
+  text-align: center;
+  font-family: var(--font-inst);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.demo__caption span {
+  display: none;
+}
+.demo[data-step="0"] [data-for="0"],
+.demo[data-step="1"] [data-for="1"],
+.demo[data-step="2"] [data-for="2"] {
+  display: inline;
+}
+.demo[data-assembled="true"] .demo__caption span {
+  display: none;
+}
+.demo[data-assembled="true"] [data-for="asm"] {
+  display: inline;
+  color: #5fd9e0;
+}
+
+/* ---------- reload ---------- */
 
 .swap {
-  flex: 1 1 auto;
-  margin: 0;
-  padding: 0;
   list-style: none;
+  margin-top: 26px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 20px;
+  counter-reset: swap;
 }
 .swap__item {
-  padding: 15px 16px;
   border: 1px solid var(--line);
+  border-left: 2px solid var(--acc);
   border-radius: 10px;
-  background: var(--panel-2);
+  background: var(--glass);
+  padding: 18px 22px;
 }
 .swap__head {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 7px;
+  gap: 12px;
+  align-items: baseline;
   font-family: var(--font-inst);
-  font-size: 0.6rem;
-  letter-spacing: 0.06em;
+  font-size: 14px;
 }
 .swap__file {
   color: var(--text);
+  font-weight: 500;
 }
 .swap__arrow {
   color: var(--faint);
 }
 .swap__verb {
-  color: var(--signal);
+  color: var(--acc);
 }
 .swap__body {
-  font-size: 0.86rem;
   color: var(--dim);
+  margin-top: 8px;
+  font-size: 14.5px;
+  max-width: 62ch;
 }
 
-/* ---- Hosts and SDKs ---------------------------------------------------- */
+/* ---------- hosts and sdks ---------- */
 
 .hosts {
+  margin-top: 30px;
   display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-  gap: clamp(18px, 2.6vw, 36px);
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 40px;
   align-items: start;
 }
 .hosts__list {
-  margin: 0;
-  padding: 0;
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 13px;
-}
-.hosts__item {
-  padding: 13px 15px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel-2);
+  display: grid;
+  gap: 20px;
 }
 .hosts__head {
   display: flex;
   align-items: baseline;
-  gap: 9px;
-  margin-bottom: 4px;
+  gap: 10px;
 }
 .hosts__name {
   font-weight: 600;
 }
-.hosts__name a {
-  text-decoration: none;
-}
 .hosts__ext {
   font-family: var(--font-inst);
-  font-size: 0.56rem;
-  color: var(--faint);
+  font-size: 12px;
+  color: var(--acc);
 }
 .hosts__body {
-  font-size: 0.84rem;
   color: var(--dim);
+  font-size: 14.5px;
+  margin-top: 4px;
 }
-
 .sdks__tabs {
   display: flex;
   gap: 6px;
-  margin-bottom: 11px;
 }
 .sdks__tab {
-  padding: 6px 13px;
+  background: none;
   border: 1px solid var(--line);
-  border-radius: 7px;
-  background: transparent;
-  color: var(--dim);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
   font-family: var(--font-inst);
-  font-size: 0.6rem;
-  letter-spacing: 0.05em;
+  font-size: 13px;
+  color: var(--dim);
+  padding: 9px 18px;
   cursor: pointer;
 }
 .sdks__tab--on {
-  border-color: var(--signal-line);
-  background: var(--signal-dim);
-  color: var(--signal-hot);
+  color: var(--acc);
+  background: var(--glass);
+  border-color: var(--line-2);
+}
+.sdks__panel {
+  border: 1px solid var(--line-2);
+  border-radius: 0 10px 10px 10px;
+  background: var(--glass);
+  backdrop-filter: blur(8px);
+  padding: 20px 22px;
 }
 .sdks__blurb {
-  font-size: 0.86rem;
   color: var(--dim);
-  margin-bottom: 8px;
+  font-size: 14.5px;
 }
 .sdks__install {
   display: inline-block;
-  margin-bottom: 11px;
-  padding: 4px 9px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--code-bg);
-  font-family: var(--font-code);
-  font-size: 0.76rem;
-  color: var(--code-text);
+  font-family: var(--font-inst);
+  font-size: 13px;
+  color: var(--acc);
+  margin-top: 10px;
 }
-.sdks__panel .code-block__pre {
-  max-height: 34vh;
+.sdks__panel .code-block {
+  margin-top: 16px;
+  border-left-color: var(--line-2);
+  box-shadow: none;
 }
 
-/* ---- Measurements ------------------------------------------------------ */
+/* ---------- measured ---------- */
 
 .measured {
+  margin-top: 30px;
   display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  gap: clamp(18px, 2.6vw, 36px);
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 40px;
   align-items: start;
 }
 .frames,
 .startup {
-  margin: 0;
-  padding: 15px 16px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: var(--panel-2);
+  background: var(--glass);
+  padding: 20px 22px;
 }
 .frames__cap,
 .startup__cap {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 12px;
   font-family: var(--font-inst);
-  font-size: 0.58rem;
-  letter-spacing: 0.06em;
+  font-size: 12px;
   color: var(--dim);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
 }
 .frames__budget,
 .startup__unit {
@@ -828,296 +889,187 @@ p {
 }
 .frames__row {
   display: grid;
-  grid-template-columns: 34px 1fr 58px;
+  grid-template-columns: 40px minmax(0, 1fr) 70px;
+  gap: 12px;
   align-items: center;
-  gap: 9px;
-  margin-bottom: 7px;
   font-family: var(--font-inst);
-  font-size: 0.58rem;
+  font-size: 13px;
+  margin-top: 12px;
 }
 .frames__key {
-  color: var(--faint);
+  color: var(--dim);
 }
 .frames__track {
-  height: 7px;
+  height: 8px;
   border-radius: 4px;
-  background: var(--line);
+  background: rgba(255, 255, 255, 0.05);
+  border-right: 2px solid var(--line-2);
   overflow: hidden;
 }
 .frames__bar {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--signal), var(--signal-hot));
+  border-radius: 4px;
+  background: var(--acc);
+  opacity: 0.85;
 }
 .frames__val {
   text-align: right;
   color: var(--text);
 }
-
 .startup__table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.8rem;
+  font-family: var(--font-inst);
+  font-size: 13px;
 }
 .startup__table th,
 .startup__table td {
-  padding: 5px 8px;
   text-align: right;
-  font-weight: 400;
-  color: var(--dim);
-  border-bottom: 1px solid var(--line);
+  padding: 8px 10px;
+  border-top: 1px solid var(--line);
 }
 .startup__table thead th {
-  font-family: var(--font-inst);
-  font-size: 0.54rem;
-  letter-spacing: 0.06em;
   color: var(--faint);
+  font-weight: 400;
+  border-top: none;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
-.startup__table tbody th {
-  position: relative;
+.startup__table th[scope="row"] {
   text-align: left;
-  color: var(--text);
+  font-weight: 400;
+  color: var(--dim);
 }
 .startup__note {
-  margin-left: 7px;
-  font-family: var(--font-inst);
-  font-size: 0.52rem;
   color: var(--faint);
+  margin-left: 8px;
+  font-size: 11px;
 }
-.startup__table td {
-  font-family: var(--font-inst);
-  font-size: 0.62rem;
-}
-.startup__self th,
+.startup__self th[scope="row"],
 .startup__self td {
-  color: var(--signal-hot);
+  color: var(--acc);
+  font-weight: 500;
 }
 
-/* ---- End of the bench -------------------------------------------------- */
+/* ---------- install (end) ---------- */
 
 .ending {
+  margin-top: 30px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: clamp(18px, 2.6vw, 36px);
+  gap: 48px;
   align-items: start;
 }
-.ending__get {
+.ending__note {
+  color: var(--dim);
+  font-size: 14px;
+  margin-top: 14px;
+  max-width: 48ch;
+}
+.ending__links {
   display: flex;
-  flex-direction: column;
   gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
 }
 .ending__scope {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px;
 }
 .scope__head {
-  margin-bottom: 8px;
   font-family: var(--font-inst);
-  font-size: 0.58rem;
-  letter-spacing: 0.08em;
-  color: var(--faint);
-  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--acc);
+  font-weight: 500;
+  margin-bottom: 12px;
 }
 .scope__list {
-  margin: 0;
-  padding: 0;
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 0.84rem;
+  display: grid;
+  gap: 8px;
   color: var(--dim);
+  font-size: 14px;
 }
 .scope__list li::before {
-  content: "+ ";
-  color: var(--signal);
-  font-family: var(--font-inst);
-}
-.scope__list--planned li::before {
-  content: "- ";
+  content: "— ";
   color: var(--faint);
 }
-
+.scope__list--planned {
+  color: var(--faint);
+}
 .ending__foot {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 22px;
-  margin-top: 16px;
-  padding-top: 14px;
+  margin-top: 10vh;
+  padding-top: 28px;
   border-top: 1px solid var(--line);
-  font-size: 0.78rem;
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  font-size: 13px;
   color: var(--faint);
 }
-
-/* ---- The ruler --------------------------------------------------------- */
-
-/* Standing on its edge beside the lamp: the graduations, the station names, and
-   a cursor that tracks how far down the bench the lamp has come. */
-.ruler {
-  position: relative;
-  flex: 1 1 auto;
-  padding-left: 14px;
-}
-
-/* The cursor is draggable, so the track under it is a real target: wide enough
-   to grab, and the whole height of the ruler. */
-.ruler__track {
-  position: absolute;
-  left: -6px;
-  top: 4px;
-  bottom: 4px;
-  width: 18px;
-  cursor: grab;
-  touch-action: none;
-}
-.ruler__track:active {
-  cursor: grabbing;
-}
-.ruler__line {
-  position: absolute;
-  left: 6px;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: linear-gradient(180deg, var(--line-2), var(--line));
-}
-.ruler__cursor {
-  position: absolute;
-  left: 4px;
-  top: calc(var(--p, 0) * (100% - 22px));
-  width: 5px;
-  height: 22px;
-  border-radius: 3px;
-  background: var(--signal-hot);
-  box-shadow: 0 0 14px var(--signal);
-}
-.ruler__track:hover .ruler__cursor {
-  box-shadow: 0 0 20px var(--signal);
-}
-
-.ruler__marks {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-.ruler__go {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  width: 100%;
-  padding: 3px 6px;
-  border: 0;
-  border-radius: 5px;
-  background: transparent;
-  font-family: var(--font-inst);
-  text-align: left;
-  cursor: pointer;
-}
-.ruler__tick {
-  width: 7px;
-  height: 1px;
-  background: var(--line-2);
-}
-.ruler__cm {
-  min-width: 2.4em;
-  font-size: 0.52rem;
-  color: var(--faint);
-}
-.ruler__name {
-  font-size: 0.62rem;
-  letter-spacing: 0.04em;
+.ending__foot a {
   color: var(--dim);
 }
-.ruler__go:hover .ruler__name {
-  color: var(--signal);
-}
-.ruler__go[aria-current="true"] .ruler__tick {
-  background: var(--signal-hot);
-  width: 11px;
-}
-.ruler__go[aria-current="true"] .ruler__name {
-  color: var(--signal-hot);
-}
-.ruler__go[aria-current="true"] .ruler__cm {
-  color: var(--signal);
-}
 
-/* ---- Narrow ------------------------------------------------------------ */
+/* ---------- narrow ---------- */
 
-/* Under 900px the instrument column would crowd the text, so the ruler moves
-   above the stations as a row of links and the lamp steps aside. */
 @media (max-width: 900px) {
-  .bench {
-    display: block;
-    padding-top: calc(var(--topbar-h) + 18px);
-  }
-  .bench__instrument {
-    position: static;
-    height: auto;
-    flex-direction: row;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 22px;
-  }
-  .lamp {
+  .rail {
     display: none;
-  }
-  .ruler {
-    padding-left: 0;
-  }
-  .ruler__track {
-    display: none;
-  }
-  /* Wrapped, not a sideways strip: with no scrollbar to see, a row that ran
-     off the edge would hide half the stations. */
-  .ruler__marks {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 8px;
-  }
-  .ruler__go {
-    width: auto;
-    border: 1px solid var(--line);
-  }
-  .ruler__tick {
-    display: none;
-  }
-  .bench__stations {
-    gap: 24px;
   }
   .station {
-    padding: 20px 16px 24px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 10vh 24px;
   }
-  .station__body,
+  .station__mark {
+    position: static;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .station__nm {
+    font-size: 15px;
+  }
+  .station__name {
+    margin-top: 0;
+  }
+  .demo {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0 24px;
+  }
+  .demo__scene {
+    display: none;
+  }
+  .notes li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
   .hosts,
   .measured,
-  .ending,
-  .ending__scope {
-    display: block;
-  }
-  .notes,
-  .hosts__list,
-  .sdks,
-  .startup,
-  .ending__scope,
-  .scope + .scope {
-    margin-top: 18px;
-  }
-  .swap {
+  .ending {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .topbar {
+    padding: 0 24px;
   }
 }
 
+/* ---------- reduced motion ---------- */
+
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation: none !important;
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
     transition: none !important;
-    scroll-behavior: auto !important;
+    animation: none !important;
   }
 }
