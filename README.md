@@ -61,3 +61,8 @@ Cloudflare dashboard.
 
 The logo marks are placeholders. The per-target build steps live in `scripts/`
 and `.github/workflows/build.yml`.
+
+## License
+
+MIT. The product docs and code examples the build clones in carry their own
+licences (Lumen: MPL-2.0, Candela: Apache-2.0).

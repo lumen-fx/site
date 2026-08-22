@@ -65,7 +65,7 @@ export function Install() {
       </div>
 
       <footer className="ending__foot">
-        <span>Apache-2.0. Read the <a href={LICENSE_URL}>licence</a>.</span>
+        <span>MPL-2.0. Read the <a href={LICENSE_URL}>licence</a>.</span>
         <span>
           The scripting language has its own home at <a href={CANDELA_URL}>candela</a>.
         </span>
