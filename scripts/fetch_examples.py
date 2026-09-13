@@ -5,13 +5,16 @@ The landings show code. Hand-copied code goes stale, so every example whose
 source is addressable as a file is pulled from the product repo at build time
 and written into a generated TypeScript module the landing imports.
 
-Four source shapes are supported:
+Three source shapes are supported:
 
   whole file      a runnable program, taken verbatim
   fenced block    the first fenced code block under a heading in a markdown
                   file, or the first fenced block in a Rust doc comment
-  template entry  one file out of a `lumenc new` template, which lives in the
-                  lumen repo as a Rust slice of (name, contents) pairs
+  doc comment     the first fenced block in a Rust `///` comment
+
+An example may come from a repo other than the landing's own: each `lumenc new`
+template is its own repo under lumen-fx, and the Lumen landing shows the counter
+template as the toolchain writes it. A spec names that with `repo`.
 
 The generated modules are committed so `vite build` works from a fresh clone,
 and CI regenerates them before every deploy, so what ships is always current.
@@ -23,8 +26,9 @@ That is the point: it is how a moved example gets noticed.
 Run this before `vite build` (scripts/build.sh and CI both do).
 
 Environment overrides:
-  LUMEN_REPO / LUMEN_REV        git URL and rev for lumen   (default: main)
-  CANDELA_REPO / CANDELA_REV    git URL and rev for candela (default: main)
+  LUMEN_REPO / LUMEN_REV        git URL and rev for lumen    (default: main)
+  CANDELA_REPO / CANDELA_REV    git URL and rev for candela  (default: main)
+  TEMPLATE_BASE / TEMPLATE_REV  owner URL and rev for the template repos
 """
 
 from __future__ import annotations
@@ -44,39 +48,26 @@ LUMEN_REV = os.environ.get("LUMEN_REV", "main")
 CANDELA_REPO = os.environ.get("CANDELA_REPO", "https://github.com/lumen-fx/candela")
 CANDELA_REV = os.environ.get("CANDELA_REV", "main")
 
+# One repo per `lumenc new` template, so a template is a real app a visitor can
+# clone rather than a string baked into the compiler.
+TEMPLATE_BASE = os.environ.get("TEMPLATE_BASE", "https://github.com/lumen-fx")
+TEMPLATE_REV = os.environ.get("TEMPLATE_REV", "main")
+
 # What each landing shows, and where it comes from.
 #
 #   const     the exported name in the generated module
-#   path      the source file, relative to the product repo root
-#   kind      "file" (verbatim), "fence" (markdown), "rustdoc", or "template"
+#   path      the source file, relative to that repo's root
+#   kind      "file" (verbatim), "fence" (markdown), or "rustdoc"
 #   after     for "fence": the heading line the block must follow
-#   template  for "template": the Rust const holding the template
-#   entry     for "template": which file of that template to take
+#   repo      optional: a template repo to read from instead of the landing's
+#             own product repo
 LUMEN_EXAMPLES = [
     # The counter template, as `lumenc new app counter` writes it to disk. The
     # landing shows all three of its files, so what a visitor reads is what the
     # toolchain scaffolds.
-    {
-        "const": "COUNTER_LMN",
-        "path": "crates/lumenc/src/scaffold.rs",
-        "kind": "template",
-        "template": "COUNTER",
-        "entry": "main.lmn",
-    },
-    {
-        "const": "COUNTER_CSS",
-        "path": "crates/lumenc/src/scaffold.rs",
-        "kind": "template",
-        "template": "COUNTER",
-        "entry": "main.css",
-    },
-    {
-        "const": "COUNTER_CDL",
-        "path": "crates/lumenc/src/scaffold.rs",
-        "kind": "template",
-        "template": "COUNTER",
-        "entry": "main.cdl",
-    },
+    {"const": "COUNTER_LMN", "repo": "counter", "path": "src/main.lmn", "kind": "file"},
+    {"const": "COUNTER_CSS", "repo": "counter", "path": "src/main.css", "kind": "file"},
+    {"const": "COUNTER_CDL", "repo": "counter", "path": "src/main.cdl", "kind": "file"},
     {
         "const": "RUST_SDK",
         "path": "sdk/rust/src/lib.rs",
@@ -151,8 +142,8 @@ def clone(repo: str, rev: str, dest: Path) -> None:
 
 def source_label(spec: dict) -> str:
     """Where a constant came from, for the comment above it."""
-    if spec["kind"] == "template":
-        return f"{spec['path']} ({spec['template']} template, {spec['entry']})"
+    if "repo" in spec:
+        return f"{spec['repo']}: {spec['path']}"
     return spec["path"]
 
 
@@ -168,8 +159,6 @@ def read_source(root: Path, spec: dict, label: str) -> str:
         return extract_fence(text, spec["after"], spec["path"], label)
     if spec["kind"] == "rustdoc":
         return extract_rustdoc(text, spec["path"], label)
-    if spec["kind"] == "template":
-        return extract_template(text, spec["template"], spec["entry"], spec["path"], label)
     sys.exit(f"error: {label}: unknown source kind {spec['kind']!r}")
 
 
@@ -217,65 +206,12 @@ def extract_rustdoc(text: str, path: str, label: str) -> str:
     sys.exit(f"error: {label}: no doc-comment code fence found in {path}")
 
 
-def extract_template(text: str, template: str, entry: str, path: str, label: str) -> str:
-    """One file out of a `lumenc new` template.
-
-    A template is a Rust slice of (filename, contents) pairs, and the contents
-    are usually raw strings, so this walks to the wanted filename and reads the
-    string literal that follows it.
-    """
-    head = re.search(rf"const\s+{re.escape(template)}\s*:[^=]*=\s*&\[", text)
-    if not head:
-        sys.exit(f"error: {label}: template {template!r} not found in {path}")
-
-    # Match the name as a tuple key, not anywhere in the file: a template's own
-    # contents mention the other files in it, and a bare search finds those
-    # first (main.lmn carries `<script src="main.cdl" />`).
-    body = text[head.end() :]
-    pair = re.search(rf'\(\s*"{re.escape(entry)}"\s*,\s*', body)
-    if not pair:
-        sys.exit(f"error: {label}: template {template!r} has no {entry!r} in {path}")
-    return read_rust_string(body[pair.end() :], entry, path, label)
-
-
-def read_rust_string(src: str, entry: str, path: str, label: str) -> str:
-    """The Rust string literal at the start of `src`, raw or escaped."""
-    if src.startswith("r"):
-        hashes = 0
-        while src[1 + hashes] == "#":
-            hashes += 1
-        if src[1 + hashes] != '"':
-            sys.exit(f"error: {label}: malformed raw string for {entry!r} in {path}")
-        close = '"' + "#" * hashes
-        end = src.find(close, 2 + hashes)
-        if end == -1:
-            sys.exit(f"error: {label}: unterminated raw string for {entry!r} in {path}")
-        return src[2 + hashes : end].rstrip("\n")
-
-    if not src.startswith('"'):
-        sys.exit(f"error: {label}: no string literal for {entry!r} in {path}")
-    out: list[str] = []
-    i = 1
-    escapes = {"n": "\n", "t": "\t", "r": "\r", "0": "\0", '"': '"', "\\": "\\"}
-    while i < len(src):
-        c = src[i]
-        if c == "\\":
-            out.append(escapes.get(src[i + 1], src[i + 1]))
-            i += 2
-            continue
-        if c == '"':
-            return "".join(out).rstrip("\n")
-        out.append(c)
-        i += 1
-    sys.exit(f"error: {label}: unterminated string for {entry!r} in {path}")
-
-
 def emit(out: Path, label: str, rev: str, entries: list[tuple[str, str, str]]) -> None:
     """Write the generated module. `entries` is (const, path, code)."""
     parts = [
         "// Generated by scripts/fetch_examples.py. Do not edit.\n",
-        f"// Each example is a file in the {label} repo, read at build time. The\n",
-        "// comment above a constant is its path there; change it in that repo.\n",
+        "// Each example is a file in a product repo, read at build time. The\n",
+        "// comment above a constant is where it came from; change it there.\n",
         "\n",
     ]
     for const, path, code in entries:
@@ -293,12 +229,27 @@ def main() -> None:
         ("candela", CANDELA_REPO, CANDELA_REV, CANDELA_EXAMPLES, "apps/candela/src/generated/examples.ts"),
     ]
     with tempfile.TemporaryDirectory() as tmp:
+        checkouts: dict[str, Path] = {}
+
+        def checkout_of(name: str, repo: str, rev: str) -> Path:
+            """Clone once per repo. A template repo can feed more than one
+            example, and the landings may come to share one."""
+            if name not in checkouts:
+                dest = Path(tmp) / name
+                clone(repo, rev, dest)
+                checkouts[name] = dest
+            return checkouts[name]
+
         for label, repo, rev, specs, out in targets:
-            checkout = Path(tmp) / label
-            clone(repo, rev, checkout)
-            entries = [
-                (s["const"], source_label(s), read_source(checkout, s, label)) for s in specs
-            ]
+            own = checkout_of(label, repo, rev)
+            entries = []
+            for spec in specs:
+                root = own
+                if "repo" in spec:
+                    root = checkout_of(
+                        spec["repo"], f"{TEMPLATE_BASE}/{spec['repo']}", TEMPLATE_REV
+                    )
+                entries.append((spec["const"], source_label(spec), read_source(root, spec, label)))
             emit(ROOT / out, label, rev, entries)
 
 
