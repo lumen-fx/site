@@ -2,17 +2,17 @@
 // Each example is a file in a product repo, read at build time. The
 // comment above a constant is where it came from; change it there.
 
-// docs/docs/language/methods.md
+// docs/src/language/methods.md
 export const TOUR_METHODS = "struct Rect {\n    w: int,\n    h: int,\n}\n\nimpl Rect {\n    fn area(self) {\n        return self.w * self.h;\n    }\n\n    fn scaled(self, factor) {\n        return Rect { w: self.w * factor, h: self.h * factor };\n    }\n}\n\nfn main() {\n    let r = Rect { w: 2, h: 3 };\n    print(r.area());\n    print(r.scaled(2).area());\n}";
 
-// docs/docs/language/enums.md
+// docs/src/language/enums.md
 export const TOUR_ENUMS = "enum Event {\n    Click(int, int),\n    Key(string),\n    Quit,\n}\n\nfn main() {\n    let e = Event::Click(3, 4);\n    match e {\n        Click(x, y) => { print(x + y); }\n        Key(name) => { print(name); }\n        Quit => { print(\"quit\"); }\n    }\n}";
 
-// docs/docs/language/functions.md
+// docs/src/language/functions.md
 export const TOUR_FUNCTIONS = "fn apply_all(f, xs) {\n    let out = [];\n    for x in xs {\n        out.push(f(x));\n    }\n    return out;\n}\n\nfn twice(x) {\n    return x * 2;\n}\n\nfn main() {\n    print(apply_all(twice, [1, 2, 3]));\n    print(apply_all(fn(v) { return v + 1; }, [1, 2]));\n}";
 
-// docs/docs/language/collections.md
+// docs/src/language/collections.md
 export const TOUR_MAPS = "fn main() {\n    let ages = {\"ada\": 36, \"alan\": 41};\n    let by_number = {1: \"one\", 2: \"two\"};\n    let empty = {};\n    print(ages.len(), by_number.get(1), empty.len());\n}";
 
-// docs/docs/language/generics.md
+// docs/src/language/generics.md
 export const TOUR_GENERICS = "struct Cell<T> {\n    value: T,\n}\n\nimpl Cell<T> {\n    fn get(self) -> T {\n        return self.value;\n    }\n}\n\nfn main() {\n    let c = Cell<int>{ value: 3 };\n    print(c.get());\n}";
