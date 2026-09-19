@@ -57,6 +57,8 @@ TEMPLATE_REV = os.environ.get("TEMPLATE_REV", "main")
 #
 #   const     the exported name in the generated module
 #   path      the source file, relative to that repo's root
+#   doc       a documentation page, relative to that product's docs_dir; use
+#             this instead of path so a product can move its markdown
 #   kind      "file" (verbatim), "fence" (markdown), or "rustdoc"
 #   after     for "fence": the heading line the block must follow
 #   repo      optional: a template repo to read from instead of the landing's
@@ -94,31 +96,31 @@ LUMEN_EXAMPLES = [
 CANDELA_EXAMPLES = [
     {
         "const": "TOUR_METHODS",
-        "path": "docs/docs/language/methods.md",
+        "doc": "language/methods.md",
         "kind": "fence",
         "after": "## impl blocks",
     },
     {
         "const": "TOUR_ENUMS",
-        "path": "docs/docs/language/enums.md",
+        "doc": "language/enums.md",
         "kind": "fence",
         "after": "## Matching",
     },
     {
         "const": "TOUR_FUNCTIONS",
-        "path": "docs/docs/language/functions.md",
+        "doc": "language/functions.md",
         "kind": "fence",
         "after": "## Functions as arguments",
     },
     {
         "const": "TOUR_MAPS",
-        "path": "docs/docs/language/collections.md",
+        "doc": "language/collections.md",
         "kind": "fence",
         "after": "## Maps",
     },
     {
         "const": "TOUR_GENERICS",
-        "path": "docs/docs/language/generics.md",
+        "doc": "language/generics.md",
         "kind": "fence",
         "after": "# Generics",
     },
@@ -140,25 +142,50 @@ def clone(repo: str, rev: str, dest: Path) -> None:
     run(["git", "-C", dest, "checkout", "-q", "FETCH_HEAD"], env=env)
 
 
-def source_label(spec: dict) -> str:
+def docs_dir(root: Path, label: str) -> Path:
+    """The product's markdown directory, relative to its repo root.
+
+    A product keeps its docs project in docs/ and names the directory holding
+    the markdown in docs/zensical.toml, the way Zensical reads it. Lumen and
+    candela both set it to src; the Zensical default is docs. Asking the
+    product means a rename there needs no change here.
+    """
+    import tomllib
+
+    config = root / "docs" / "zensical.toml"
+    if not config.is_file():
+        sys.exit(f"error: {label}: no docs/zensical.toml at {config}")
+    with config.open("rb") as fh:
+        data = tomllib.load(fh)
+    return Path("docs") / data.get("project", {}).get("docs_dir", "docs")
+
+
+def spec_path(root: Path, spec: dict, label: str) -> Path:
+    """The source file for one entry, relative to its repo root."""
+    if "doc" in spec:
+        return docs_dir(root, label) / spec["doc"]
+    return Path(spec["path"])
+
+
+def source_label(spec: dict, rel: Path) -> str:
     """Where a constant came from, for the comment above it."""
     if "repo" in spec:
-        return f"{spec['repo']}: {spec['path']}"
-    return spec["path"]
+        return f"{spec['repo']}: {rel}"
+    return str(rel)
 
 
-def read_source(root: Path, spec: dict, label: str) -> str:
-    src = root / spec["path"]
+def read_source(root: Path, spec: dict, rel: Path, label: str) -> str:
+    src = root / rel
     if not src.is_file():
-        sys.exit(f"error: {label}: {spec['path']} not found; the example moved or was deleted")
+        sys.exit(f"error: {label}: {rel} not found; the example moved or was deleted")
     text = src.read_text(encoding="utf-8")
 
     if spec["kind"] == "file":
         return text.rstrip("\n")
     if spec["kind"] == "fence":
-        return extract_fence(text, spec["after"], spec["path"], label)
+        return extract_fence(text, spec["after"], str(rel), label)
     if spec["kind"] == "rustdoc":
-        return extract_rustdoc(text, spec["path"], label)
+        return extract_rustdoc(text, str(rel), label)
     sys.exit(f"error: {label}: unknown source kind {spec['kind']!r}")
 
 
@@ -249,7 +276,10 @@ def main() -> None:
                     root = checkout_of(
                         spec["repo"], f"{TEMPLATE_BASE}/{spec['repo']}", TEMPLATE_REV
                     )
-                entries.append((spec["const"], source_label(spec), read_source(root, spec, label)))
+                rel = spec_path(root, spec, label)
+                entries.append(
+                    (spec["const"], source_label(spec, rel), read_source(root, spec, rel, label))
+                )
             emit(ROOT / out, label, rev, entries)
 
 
