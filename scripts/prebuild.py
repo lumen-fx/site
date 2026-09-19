@@ -54,8 +54,9 @@ REPOS = BUILD / "repos"
 def _source(name: str, default_src: str, default_repo: str, dest_subdir: str) -> dict:
     """Describe where one product's markdown comes from and where it lands.
 
-    src_subdir is the path inside the product's docs project that holds the
-    markdown; both products keep it at docs/. dest_subdir is the path inside the
+    The directory inside the product's docs project that holds the markdown is
+    not fixed here; it comes from the product's own zensical.toml, so a product
+    that renames it stays buildable. dest_subdir is the path inside the
     assembled docs_dir, so "." serves the product at the site root.
     """
     key = name.upper()
@@ -69,7 +70,6 @@ def _source(name: str, default_src: str, default_repo: str, dest_subdir: str) ->
         "clone": bool(repo or rev),
         "repo": repo or default_repo,
         "rev": rev or "main",
-        "src_subdir": Path("docs"),
         "dest_subdir": Path(dest_subdir),
     }
 
@@ -142,15 +142,31 @@ def resolve_source(target: str, src: dict) -> tuple[Path, str]:
     return path, str(path)
 
 
-def read_product_nav(project_root: Path, product: str) -> list:
-    """Read the nav list from a product's own docs/zensical.toml."""
+def read_product_config(project_root: Path, product: str) -> dict:
+    """Load a product's own docs/zensical.toml."""
     import tomllib
 
     config = project_root / "zensical.toml"
     if not config.is_file():
         sys.exit(f"error: {product} has no zensical.toml at {config}")
     with config.open("rb") as fh:
-        data = tomllib.load(fh)
+        return tomllib.load(fh)
+
+
+def read_product_docs_dir(project_root: Path, product: str) -> Path:
+    """Return the directory inside a product's docs project holding markdown.
+
+    Zensical calls it docs_dir and defaults it to docs/; Lumen and candela both
+    set it to src. Reading it here means the product decides, and a rename on
+    the product side needs no change in this repo.
+    """
+    data = read_product_config(project_root, product)
+    return Path(data.get("project", {}).get("docs_dir", "docs"))
+
+
+def read_product_nav(project_root: Path, product: str) -> list:
+    """Read the nav list from a product's own docs/zensical.toml."""
+    data = read_product_config(project_root, product)
     nav = data.get("project", {}).get("nav")
     if not nav:
         sys.exit(f"error: {product} zensical.toml has no [project] nav")
@@ -265,7 +281,7 @@ def assemble_target(target: dict) -> None:
     for src in target["sources"]:
         project_root, label = resolve_source(name, src)
         roots[src["name"]] = project_root
-        md_src = project_root / src["src_subdir"]
+        md_src = project_root / read_product_docs_dir(project_root, src["name"])
         if not md_src.is_dir():
             sys.exit(f"error: {src['name']} markdown not found at {md_src}")
         md_dest = docs_out / src["dest_subdir"]
