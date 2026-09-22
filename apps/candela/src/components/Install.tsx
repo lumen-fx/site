@@ -2,8 +2,10 @@ import { useState } from "react";
 import {
   DOCS_URL,
   INSTALL_CMD,
+  KEEL_URL,
   LICENSE_URL,
   LUMEN_URL,
+  NOTICE_URL,
   MSI_URL,
   RELEASES_URL,
   REPO_URL,
@@ -70,6 +72,10 @@ export function Install() {
 
       <footer className="foot">
         <span>Apache-2.0. Read the <a href={LICENSE_URL}>licence</a>.</span>
+        <span>
+          candela began as a fork of <a href={KEEL_URL}>keel</a>, by Horace Hoff. Read the{" "}
+          <a href={NOTICE_URL}>notice</a>.
+        </span>
         <span>
           candela is also the scripting language of <a href={LUMEN_URL}>Lumen</a>.
         </span>
