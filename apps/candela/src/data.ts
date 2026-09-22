@@ -15,6 +15,8 @@ export const DOCS_URL = "https://docs.lumenfx.dev/candela/";
 export const RELEASES_URL = "https://github.com/lumen-fx/candela/releases/latest";
 export const LUMEN_URL = "https://lumenfx.dev/";
 export const LICENSE_URL = "https://github.com/lumen-fx/candela/blob/main/LICENSE";
+export const NOTICE_URL = "https://github.com/lumen-fx/candela/blob/main/NOTICE";
+export const KEEL_URL = "https://github.com/horacehoff/keel";
 
 // install.sh is served from this site's own root (see the CI packaging step).
 export const INSTALL_CMD = "curl -fsSL https://candela.lumenfx.dev/install.sh | sh";

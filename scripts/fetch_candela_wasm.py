@@ -47,6 +47,12 @@ TAG = os.environ.get("CANDELA_WASM_TAG", "latest")
 LOCAL = os.environ.get("CANDELA_WASM_DIR")
 
 WANTED = ("candela.js", "candela_bg.wasm")
+# The licence text the runtime is distributed under, and the attribution
+# that goes with it, when the release carries them beside the runtime. They
+# are served next to the wasm so a visitor who loads the runtime can read
+# what it comes with. Older releases do not carry them, so their absence
+# is not an error.
+CARRIED = ("LICENSE", "NOTICE", "THIRD-PARTY-LICENSE")
 
 
 def api_slug(repo: str) -> str:
@@ -96,6 +102,10 @@ def take_from(directory: Path, source: str) -> None:
         if not found.is_file():
             sys.exit(f"error: {name} not found in {directory}; is that a --target web build?")
         shutil.copyfile(found, RUNTIME / name)
+    for name in CARRIED:
+        found = directory / name
+        if found.is_file():
+            shutil.copyfile(found, RUNTIME / name)
     emit(source)
 
 
