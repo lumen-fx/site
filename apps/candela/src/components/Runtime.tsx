@@ -39,7 +39,7 @@ export function Runtime() {
 
       <figure className="speed">
         <figcaption className="speed__cap">
-          hyperfine, 2021 M1 Pro, from BENCHMARKS.md in the repository
+          median wall-clock time, Intel Core i9-12900K, LuaJIT with its JIT off, from BENCHMARKS.md in the repository
         </figcaption>
         <table className="speed__table">
           <thead>
