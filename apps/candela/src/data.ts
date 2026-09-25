@@ -97,7 +97,8 @@ export const RUNTIME_FACTS: RuntimeFact[] = [
   },
 ];
 
-// From BENCHMARKS.md: hyperfine, 2021 M1 Pro. An illustrative selection.
+// From BENCHMARKS.md in the candela repository: median wall-clock time,
+// Intel Core i9-12900K, Arch Linux. An illustrative selection.
 export interface Bench {
   name: string;
   candela: string;
@@ -106,8 +107,8 @@ export interface Bench {
 }
 
 export const BENCHMARKS: Bench[] = [
-  { name: "Iterative fib", candela: "73.4 ms", python: "740 ms", luajit: "72.5 ms" },
-  { name: "FizzBuzz x1M", candela: "21.6 ms", python: "149.2 ms", luajit: "84.2 ms" },
-  { name: "String / array ops", candela: "5.8 ms", python: "28.2 ms", luajit: "27.6 ms" },
-  { name: "C FFI x10M", candela: "185.2 ms", python: "2907 ms", luajit: "535.8 ms" },
+  { name: "Iterative fib", candela: "30.3 ms", python: "541 ms", luajit: "29.7 ms" },
+  { name: "FizzBuzz x1M", candela: "16.3 ms", python: "98.1 ms", luajit: "50.5 ms" },
+  { name: "String / array ops", candela: "3.5 ms", python: "14.0 ms", luajit: "2.0 ms" },
+  { name: "C FFI x10M", candela: "193 ms", python: "2512 ms", luajit: "350 ms" },
 ];
