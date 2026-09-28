@@ -12,8 +12,12 @@ Run this before `vite build` (scripts/build.sh and CI both do). Mirrors the
 docs prebuild's fresh-clone model.
 
 Environment overrides:
-  LUMEN_REPO   git URL for lumen           (default: the public GitHub repo)
-  LUMEN_REV    branch, tag, or commit SHA (default: main)
+  LUMEN_REPO          git URL for lumen           (default: the public GitHub repo)
+  LUMEN_INSTALL_REV   branch, tag, or commit SHA (default: main)
+
+The installer comes from main, not from the release the docs are built from,
+so an installer fix reaches users without waiting for a release. It has its
+own rev variable for that reason; LUMEN_REV only moves the docs and examples.
 """
 
 from __future__ import annotations
@@ -28,7 +32,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PUBLIC = ROOT / "apps" / "lumen" / "public"
 REPO = os.environ.get("LUMEN_REPO", "https://github.com/lumen-fx/lumen")
-REV = os.environ.get("LUMEN_REV", "main")
+REV = os.environ.get("LUMEN_INSTALL_REV", "main")
 
 # Where the installer lives in the lumen repo.
 INSTALL_PATH = "tools/release/install.sh"

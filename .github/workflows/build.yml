@@ -2,7 +2,9 @@ name: build-site
 
 # Builds the three static targets (apex, candela, docs) and deploys each to its
 # own Cloudflare Pages project. Product docs are cloned fresh at build time (see
-# scripts/prebuild.py); nothing docs-related is committed here.
+# scripts/prebuild.py); nothing docs-related is committed here. The docs and the
+# landing code samples come from each product's latest release, so they
+# describe the version a visitor can install.
 #
 # Each target is a self-contained static build served at a domain root:
 #   apex    -> lumenfx.dev          Pages project: lumenfx          (Vite + React)
@@ -21,8 +23,8 @@ on:
   # trigger the required `build` check never reports there and the queue
   # times out and drops the PR.
   merge_group:
-  # Product repos (lumen, candela) send this from their own CI when their
-  # main changes, so docs and install.sh redeploy without a manual dispatch.
+  # Product repos (lumen, candela) send this from their own CI, so docs and
+  # install.sh redeploy without a manual dispatch.
   repository_dispatch:
     types: [product-updated]
   # Daily fallback for a missed dispatch or a product repo whose sender is
@@ -32,13 +34,13 @@ on:
   workflow_dispatch:
     inputs:
       candela_rev:
-        description: "candela rev to build (branch, tag, or SHA)"
+        description: "candela rev to build the docs from (branch, tag, or SHA; empty = latest release)"
         required: false
-        default: "main"
+        default: ""
       lumen_rev:
-        description: "lumen rev to build the docs from (branch, tag, or SHA)"
+        description: "lumen rev to build the docs from (branch, tag, or SHA; empty = latest release)"
         required: false
-        default: "main"
+        default: ""
       candela_wasm_tag:
         description: "candela release to take the browser runtime from"
         required: false
@@ -50,16 +52,41 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      # Setting a rev makes the prebuild clone that product fresh instead of
-      # reading a local checkout. Default to main. A release bumps these to
-      # pinned tags or SHAs, either by editing the defaults or via the
-      # workflow_dispatch inputs above.
-      CANDELA_REV: ${{ github.event.inputs.candela_rev || 'main' }}
-      LUMEN_REV: ${{ github.event.inputs.lumen_rev || 'main' }}
     steps:
       - name: Checkout site
         uses: actions/checkout@v4
+
+      # LUMEN_REV and CANDELA_REV pick the rev the docs and the landing code
+      # samples are cloned from. Each defaults to the product's latest release
+      # tag; releases/latest skips prereleases, so the rolling nightly is never
+      # picked. A workflow_dispatch input overrides it, e.g. lumen_rev=main to
+      # ship an urgent docs fix before the next release. If the lookup fails
+      # the build fails: silently building main would publish docs for features
+      # nobody can install yet. The installers stay on main (see below).
+      - name: Resolve product revs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LUMEN_INPUT: ${{ github.event.inputs.lumen_rev }}
+          CANDELA_INPUT: ${{ github.event.inputs.candela_rev }}
+        run: |
+          set -euo pipefail
+          resolve() {
+            local repo="$1" input="$2" tag
+            if [ -n "$input" ]; then
+              echo "$input"
+              return
+            fi
+            if ! tag=$(gh api "repos/lumen-fx/$repo/releases/latest" -q .tag_name) || [ -z "$tag" ]; then
+              echo "::error::could not resolve the latest release of lumen-fx/$repo; set the ${repo}_rev input to build a specific rev" >&2
+              return 1
+            fi
+            echo "$tag"
+          }
+          lumen=$(resolve lumen "$LUMEN_INPUT")
+          candela=$(resolve candela "$CANDELA_INPUT")
+          echo "lumen docs @ $lumen, candela docs @ $candela"
+          echo "LUMEN_REV=$lumen" >> "$GITHUB_ENV"
+          echo "CANDELA_REV=$candela" >> "$GITHUB_ENV"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -92,7 +119,9 @@ jobs:
 
       # The Lumen landing is a static Vite + React app. Fetch install.sh fresh
       # from the lumen repo so it ships at lumenfx.dev/install.sh, then build
-      # to dist/apex.
+      # to dist/apex. The installer is taken from main (LUMEN_INSTALL_REV),
+      # not from the release the docs follow, so an installer fix ships
+      # without waiting for a release.
       - name: Package lumen install.sh
         run: uv run python scripts/fetch_lumen_install.py
 
@@ -104,7 +133,8 @@ jobs:
 
       # The Candela landing is a static Vite + React app. Fetch install.sh fresh
       # from the candela repo so it ships at candela.lumenfx.dev/install.sh, then
-      # build to dist/candela.
+      # build to dist/candela. Like the Lumen one, it comes from main
+      # (CANDELA_INSTALL_REV).
       - name: Package candela install.sh
         run: uv run python scripts/fetch_candela_install.py
 

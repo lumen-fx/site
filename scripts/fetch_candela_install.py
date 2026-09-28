@@ -12,8 +12,12 @@ Run this before `vite build` (scripts/build.sh and CI both do). Mirrors the
 docs prebuild's fresh-clone model.
 
 Environment overrides:
-  CANDELA_REPO   git URL for candela        (default: the public GitHub repo)
-  CANDELA_REV    branch, tag, or commit SHA (default: main)
+  CANDELA_REPO          git URL for candela        (default: the public GitHub repo)
+  CANDELA_INSTALL_REV   branch, tag, or commit SHA (default: main)
+
+The installer comes from main, not from the release the docs are built from,
+so an installer fix reaches users without waiting for a release. It has its
+own rev variable for that reason; CANDELA_REV only moves the docs and examples.
 """
 
 from __future__ import annotations
@@ -28,7 +32,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PUBLIC = ROOT / "apps" / "candela" / "public"
 REPO = os.environ.get("CANDELA_REPO", "https://github.com/lumen-fx/candela")
-REV = os.environ.get("CANDELA_REV", "main")
+REV = os.environ.get("CANDELA_INSTALL_REV", "main")
 
 
 def run(cmd: list, **kw) -> None:

@@ -22,8 +22,9 @@ landing with hot reload:
 npm --prefix apps/lumen install && npm --prefix apps/lumen run dev
 ```
 
-The docs build reads each product from a checkout on disk by default; setting
-`LUMEN_REV` or `CANDELA_REV` clones it fresh instead, which is what CI does.
+The docs build clones each product at its latest release, like CI. Set
+`LUMEN_REV` or `CANDELA_REV` to build another rev (for example `main`), or
+`LUMEN_DOCS_SRC` or `CANDELA_DOCS_SRC` to read a checkout on disk.
 `scripts/prebuild.py` lists the variables that point at sources.
 
 The Candela landing also needs candela compiled to WebAssembly, which its
