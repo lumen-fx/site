@@ -8,17 +8,48 @@
 # before `vite build`. Every target lands in dist/<target>/, matching the CI
 # workflow.
 #
-# The docs build reads each product from a local checkout by default. Set
-# LUMEN_REPO or CANDELA_REPO to clone that product fresh instead; see
+# The docs and the landing code samples come from each product's latest
+# release, like the deployed site: LUMEN_REV and CANDELA_REV default to the
+# tag GitHub reports as the latest release. Set a rev to build another tag,
+# a branch, or a SHA, or set <PRODUCT>_DOCS_SRC to read the docs from a local
+# checkout instead. The installers come from main either way. See
 # scripts/prebuild.py for the full list of source variables.
 #
-#   scripts/build.sh                      # local product checkouts, install.sh from main
-#   LUMEN_DOCS_SRC=~/lumen/docs scripts/build.sh   # point the Lumen docs elsewhere
-#   LUMEN_REV=v0.2.0 scripts/build.sh     # pin the lumen docs + install.sh to a tag/SHA
-#   CANDELA_REV=v0.2.0 scripts/build.sh   # pin the candela docs + install.sh to a tag/SHA
+#   scripts/build.sh                      # latest releases, install.sh from main
+#   LUMEN_REV=main scripts/build.sh       # the lumen docs as they are on main
+#   CANDELA_REV=v0.2.0 scripts/build.sh   # the candela docs at a tag or SHA
+#   LUMEN_DOCS_SRC=~/Lumen/docs scripts/build.sh   # the lumen docs from disk
 #   CANDELA_WASM_DIR=~/candela/pkg scripts/build.sh   # local candela runtime
 set -euo pipefail
 cd "$(dirname "$0")/.."
+
+# Print the tag of a lumen-fx product's latest release, or fail loudly.
+latest_release() {
+  local repo="$1" tag=""
+  if command -v gh >/dev/null 2>&1; then
+    tag=$(gh api "repos/lumen-fx/$repo/releases/latest" -q .tag_name 2>/dev/null || true)
+  fi
+  if [ -z "$tag" ]; then
+    tag=$(curl -fsSL "https://api.github.com/repos/lumen-fx/$repo/releases/latest" 2>/dev/null |
+      sed -n 's/^ *"tag_name": *"\([^"]*\)".*/\1/p' || true)
+  fi
+  if [ -z "$tag" ]; then
+    echo "error: could not resolve the latest release of lumen-fx/$repo;" \
+      "set ${repo^^}_REV or ${repo^^}_DOCS_SRC" >&2
+    return 1
+  fi
+  echo "$tag"
+}
+
+if [ -z "${LUMEN_REV:-}" ] && [ -z "${LUMEN_DOCS_SRC:-}" ]; then
+  LUMEN_REV=$(latest_release lumen)
+  export LUMEN_REV
+fi
+if [ -z "${CANDELA_REV:-}" ] && [ -z "${CANDELA_DOCS_SRC:-}" ]; then
+  CANDELA_REV=$(latest_release candela)
+  export CANDELA_REV
+fi
+echo "lumen docs @ ${LUMEN_REV:-$LUMEN_DOCS_SRC}, candela docs @ ${CANDELA_REV:-$CANDELA_DOCS_SRC}"
 
 # --- Docs (Zensical) ---
 uv sync

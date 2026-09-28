@@ -32,7 +32,12 @@ Environment overrides, per product (LUMEN and CANDELA):
                        docs/); used when neither variable below is set
   <PRODUCT>_REPO       git URL to clone instead of reading the local path
   <PRODUCT>_REV        branch, tag, or commit SHA to clone (default: main);
-                       setting this alone clones the product's public repo
+                       setting this alone clones the product's public repo.
+                       CI and scripts/build.sh set it to the product's latest
+                       release tag.
+
+Each product's migration guides (docs/migration/ in its repo) are rendered by
+scripts/migration.py into a Migration section of that product's nav.
 """
 
 from __future__ import annotations
@@ -42,6 +47,8 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+import migration
 
 ROOT = Path(__file__).resolve().parent.parent
 CONTENT = ROOT / "content"
@@ -122,8 +129,9 @@ def clone(repo: str, rev: str, dest: Path) -> None:
     run(["git", "-C", dest, "checkout", "-q", "FETCH_HEAD"], env=env)
 
 
-def resolve_source(target: str, src: dict) -> tuple[Path, str]:
-    """Return the docs project root for a product, plus a label for the log.
+def resolve_source(target: str, src: dict) -> tuple[Path, str | None, str]:
+    """Return the docs project root for a product, the rev it was cloned at
+    (None for a local checkout), and a label for the log.
 
     Both products keep their docs project in a top-level docs/ directory, so a
     clone of the product repo is one level above the project root.
@@ -132,14 +140,14 @@ def resolve_source(target: str, src: dict) -> tuple[Path, str]:
     if src["clone"]:
         dest = REPOS / f"{target}-{src['name']}"
         clone(src["repo"], src["rev"], dest)
-        return dest / "docs", f"{src['repo']} @ {src['rev']}"
+        return dest / "docs", src["rev"], f"{src['repo']} @ {src['rev']}"
     path = src["src"]
     if not path.is_dir():
         sys.exit(
             f"error: {src['name']} docs not found at {path}. Point "
             f"{key}_DOCS_SRC at a local checkout, or set {key}_REPO to clone it."
         )
-    return path, str(path)
+    return path, None, str(path)
 
 
 def read_product_config(project_root: Path, product: str) -> dict:
@@ -198,16 +206,37 @@ def _emit_nav(value, indent: str) -> str:
     sys.exit(f"error: unexpected nav value: {value!r}")
 
 
-def unified_nav(lumen_root: Path, candela_root: Path) -> str:
+def with_migration(nav: list, pages: list[str]) -> list:
+    """Insert a Migration section just before the Contributing entry, or at
+    the end when the product has none."""
+    if not pages:
+        return nav
+    section = {"Migration": pages}
+    for i, entry in enumerate(nav):
+        if isinstance(entry, dict) and "Contributing" in entry:
+            return nav[:i] + [section] + nav[i:]
+    return nav + [section]
+
+
+def unified_nav(
+    lumen_root: Path,
+    candela_root: Path,
+    migration_pages: dict[str, list[str]],
+) -> str:
     """Compose the unified nav from the two products' own navs.
 
     Lumen serves at the site root and Candela under /candela/, so Candela's
     relative paths gain that prefix. Lumen's external link to /candela/ is
     dropped (the Candela section replaces it), and Candela links back into the
-    Lumen doc set become site-relative.
+    Lumen doc set become site-relative. Each product's migration pages, if it
+    has any, form a Migration section before its Contributing entry.
     """
-    lumen_nav = read_product_nav(lumen_root, "lumen")
-    candela_nav = read_product_nav(candela_root, "candela")
+    lumen_nav = with_migration(
+        read_product_nav(lumen_root, "lumen"), migration_pages.get("lumen", [])
+    )
+    candela_nav = with_migration(
+        read_product_nav(candela_root, "candela"), migration_pages.get("candela", [])
+    )
 
     lumen_entries = [
         e
@@ -278,8 +307,9 @@ def assemble_target(target: dict) -> None:
     )
 
     roots: dict[str, Path] = {}
+    migration_pages: dict[str, list[str]] = {}
     for src in target["sources"]:
-        project_root, label = resolve_source(name, src)
+        project_root, rev, label = resolve_source(name, src)
         roots[src["name"]] = project_root
         md_src = project_root / read_product_docs_dir(project_root, src["name"])
         if not md_src.is_dir():
@@ -291,10 +321,19 @@ def assemble_target(target: dict) -> None:
             f"{md_dest.resolve().relative_to(ROOT)}",
             flush=True,
         )
+        # The product checkout is the parent of its docs/ project.
+        pages = migration.render(project_root.resolve().parent, rev, md_dest)
+        migration_pages[src["name"]] = pages
+        if pages:
+            print(
+                f"[{name}] rendered {len(pages) - 1} {src['name']} migration "
+                f"page(s) -> {(md_dest / 'migration').resolve().relative_to(ROOT)}",
+                flush=True,
+            )
 
     nav_text = None
     if name == "docs":
-        nav_text = unified_nav(roots["lumen"], roots["candela"])
+        nav_text = unified_nav(roots["lumen"], roots["candela"], migration_pages)
     generate_config(name, nav_text)
     print(f"[{name}] docs_dir assembled at {docs_out.relative_to(ROOT)}", flush=True)
 

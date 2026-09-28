@@ -7,6 +7,15 @@ Source for the Lumen and Candela websites.
 - The docs build puts the Lumen and Candela docs under one search at
   `docs.lumenfx.dev`: Lumen at the root, Candela under `/candela/`.
 
+The docs describe each product's latest release, the version a visitor can
+install, not its `main` branch. A docs change merged to a product repo appears
+on the site with that product's next release.
+
+Each product's docs carry a Migration section: one page per release that broke
+something, listing each break and what to change when you upgrade. The pages
+are built from notes the product repos keep beside their docs, one per
+breaking change.
+
 The landings are React (Vite, TypeScript). The docs use
 [Zensical](https://zensical.org). Everything builds to static files.
 
@@ -30,12 +39,19 @@ Work on one landing with hot reload:
 npm --prefix apps/lumen install && npm --prefix apps/lumen run dev
 ```
 
-Both doc sets live in their product repos, not here. A local build reads them
-from checkouts on disk; setting `LUMEN_REV` or `CANDELA_REV` pulls that product
-fresh from its repo instead, which is what CI does. `scripts/prebuild.py` lists
-the variables that point at other sources. `install.sh` on both the Lumen and
-Candela landings is fetched fresh from the matching product repo the same way
-and is never committed here.
+Both doc sets live in their product repos, not here. A build clones each
+product at its latest release. To build against another rev, set `LUMEN_REV` or
+`CANDELA_REV`; to preview docs from a local checkout, set `LUMEN_DOCS_SRC` or
+`CANDELA_DOCS_SRC` to its `docs/` directory:
+
+```sh
+LUMEN_REV=main scripts/build.sh
+LUMEN_DOCS_SRC=~/Lumen/docs scripts/build.sh
+```
+
+`scripts/prebuild.py` lists the other source variables. `install.sh` on both
+landings is fetched from the matching product repo's `main`, so an installer
+fix ships without waiting for a release, and is never committed here.
 
 The candela runtime the prompt loads is fetched the same way, from the `web`
 asset of a candela release. Set `CANDELA_WASM_TAG` to take it from a particular
@@ -56,6 +72,10 @@ described in the release checklist in the lumen repo.
 Pushing to `main` builds all three sites and deploys them to Cloudflare Pages.
 Pull requests build but do not deploy. Custom domains are attached in the
 Cloudflare dashboard.
+
+To publish a docs fix before the next release, run the build workflow by hand
+with `lumen_rev` or `candela_rev` set to `main`. Left empty, each takes the
+latest release.
 
 ## Notes
 

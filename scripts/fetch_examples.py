@@ -29,6 +29,10 @@ Environment overrides:
   LUMEN_REPO / LUMEN_REV        git URL and rev for lumen    (default: main)
   CANDELA_REPO / CANDELA_REV    git URL and rev for candela  (default: main)
   TEMPLATE_BASE / TEMPLATE_REV  owner URL and rev for the template repos
+
+CI and scripts/build.sh set LUMEN_REV and CANDELA_REV to each product's latest
+release tag, the same revs the docs are built from, so the landings show code
+from the release a visitor installs.
 """
 
 from __future__ import annotations
