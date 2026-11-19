@@ -76,18 +76,18 @@ LUMEN_EXAMPLES = [
     {"const": "COUNTER_CDL", "repo": "counter", "path": "src/main.cdl", "kind": "file"},
     {
         "const": "RUST_SDK",
-        "path": "sdk/rust/src/lib.rs",
+        "path": "public/lumenui/rust/src/lib.rs",
         "kind": "rustdoc",
     },
     {
         "const": "PYTHON_SDK",
-        "path": "sdk/python/README.md",
+        "path": "public/lumenui/python/README.md",
         "kind": "fence",
         "after": "## Quickstart",
     },
     {
         "const": "CPP_SDK",
-        "path": "sdk/cpp/README.md",
+        "path": "public/lumenui/cpp/README.md",
         "kind": "fence",
         "after": "## Quickstart",
     },
@@ -215,7 +215,7 @@ def extract_fence(text: str, after: str, path: str, label: str) -> str:
 
 
 def extract_rustdoc(text: str, path: str, label: str) -> str:
-    """The first fenced block inside a `///` doc comment.
+    """The first fenced block inside a `///` or `//!` doc comment.
 
     Doc-comment markers and the hidden `#` lines rustdoc strips from rendered
     output are removed, leaving the code a reader sees on docs.rs.
@@ -224,9 +224,9 @@ def extract_rustdoc(text: str, path: str, label: str) -> str:
     inside = False
     for raw in text.splitlines():
         stripped = raw.strip()
-        if not stripped.startswith("///"):
+        if not stripped.startswith(("///", "//!")):
             continue
-        line = re.sub(r"^\s*///\s?", "", raw)
+        line = re.sub(r"^\s*//[/!]\s?", "", raw)
         if line.lstrip().startswith("```"):
             if inside:
                 return "\n".join(body).rstrip("\n")
