@@ -4,6 +4,7 @@ import {
   CANDELA_URL,
   DOCS_URL,
   LICENSE_URL,
+  MSI_ARM_URL,
   MSI_URL,
   PLANNED,
   RELEASES_URL,
@@ -25,9 +26,13 @@ export function Install() {
         <div className="ending__get">
           <InstallLine />
           <p className="ending__note">
-            On Windows,{" "}
+            On Windows, download the installer for{" "}
             <a href={MSI_URL} download>
-              download the installer
+              x86_64
+            </a>{" "}
+            or{" "}
+            <a href={MSI_ARM_URL} download>
+              Arm64
             </a>
             . It is unsigned for now, so Windows warns before it runs.
           </p>
