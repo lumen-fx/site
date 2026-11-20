@@ -14,7 +14,7 @@ export function Hosts() {
     <Station
       index={5}
       title="Bring your own language."
-      lede="Lumen picks a script host from the file extension, so an app and a plugin can each use what suits them. Or skip scripting: own the state and the handlers from your own program over the C ABI."
+      lede="Scripts are candela, a small typed language that compiles while you work and ships as bytecode. Or skip scripting: own the state and the handlers from your own program, in Rust or over the C ABI."
       wide
     >
       <div className="hosts">

@@ -3,7 +3,7 @@
 // comment above a constant is where it came from; change it there.
 
 // counter: src/main.lmn
-export const COUNTER_LMN = "<root bg=\"#0c1c30\" padding=\"32\" gap=\"20\" align=\"center\" justify=\"center\">\n  <label class=\"display\" id=\"counter\" width=\"100%\" height=\"120px\" text=\"0\"\n         bind-text=\"clicks\" />\n  <row gap=\"14\" justify=\"center\">\n    <button class=\"primary\" id=\"bump\"  width=\"120px\" height=\"48px\" text=\"+1\" />\n    <button class=\"primary\" id=\"reset\" width=\"120px\" height=\"48px\" text=\"reset\" />\n  </row>\n  <script src=\"main.cdl\" />\n</root>";
+export const COUNTER_LMN = "<root padding=\"32\" gap=\"20\" align=\"center\" justify=\"center\" bg=\"#0c1c30\">\n  <label id=\"counter\" class=\"display\" width=\"100%\" height=\"120px\" text=\"0\" bind-text=\"clicks\" />\n  <row gap=\"14\" justify=\"center\">\n    <button id=\"bump\" class=\"primary\" width=\"120px\" height=\"48px\" text=\"+1\" />\n    <button id=\"reset\" class=\"primary\" width=\"120px\" height=\"48px\" text=\"reset\" />\n  </row>\n  <script src=\"main.cdl\" />\n</root>";
 
 // counter: src/main.css
 export const COUNTER_CSS = ":root {\n  --color-accent:  #5fd9e0;\n  --color-bg:      #163459;\n  --color-hover:   #1d4477;\n  --color-active:  #0e2c52;\n  --color-on-bg:   #ffffff;\n  --radius-pill:   24;\n}\n\n.display { text-align: center; font-size: 96; text-color: var(--color-on-bg); }\n\n.primary {\n  bg:        var(--color-bg);\n  hover-bg:  var(--color-hover);\n  press-bg:  var(--color-active);\n  text-color: var(--color-on-bg);\n  radius:    var(--radius-pill);\n  text-align: center;\n  font-size: 18;\n}\n.primary:focus { outline: 2 var(--color-accent); }";
@@ -11,11 +11,11 @@ export const COUNTER_CSS = ":root {\n  --color-accent:  #5fd9e0;\n  --color-bg: 
 // counter: src/main.cdl
 export const COUNTER_CDL = "import \"lumen.cdl\";\n\n// on_ready runs on the first tick, once the tree is mounted, so the elements\n// are there to look up. on_start runs before that, when nothing is queryable.\nfn on_ready() {\n    signal<int>(\"clicks\").set(0);\n\n    get_by_id(\"bump\").on(\"click\", \"on_bump\");\n    get_by_id(\"reset\").on(\"click\", \"on_reset\");\n}\n\n// A handler is called with the event id. Wrap it with `event(ev)` to read the\n// event itself: `event(ev).target()`, `.shift()`, `.prevent_default()`.\nfn on_bump(ev: int) {\n    let clicks = signal<int>(\"clicks\");\n    clicks.set(clicks.get() + 1);\n}\n\nfn on_reset(ev: int) {\n    signal<int>(\"clicks\").set(0);\n}\n\nfn main() {}";
 
-// sdk/rust/src/lib.rs
-export const RUST_SDK = "use lumenui::simple::App;\nuse lumenui::prelude::*;\n\nApp::builder()\n    .markup(\"<root><label id=\\\"l\\\" bind-text=\\\"msg\\\" text=\\\"hi\\\"/></root>\")\n    .property(\"msg\", \"hello\")\n    .on_click(\"l\", |ctx| ctx.set(\"msg\", \"clicked\"))\n    .run()";
+// public/lumenui/rust/src/lib.rs
+export const RUST_SDK = "// build.rs, with `lumenui-build` under [build-dependencies]\nfn main() {\n    lumenui_build::compile();\n}\n\n// src/main.rs\nuse lumenui::prelude::*;\n\nfn main() -> lumenui::Result<()> {\n    lumenui::app!()\n        .signal(\"clicks\", 0i64)\n        .on_click(\"bump\", |ui, _| ui.update(\"clicks\", |n: i64| n + 1))\n        .run()\n}";
 
-// sdk/python/README.md
+// public/lumenui/python/README.md
 export const PYTHON_SDK = "import lumen\n\nclass Counter(lumen.Model):        # dataclass-style: each field is a signal\n    count: int = 0\n    label: str = \"0 clicks\"\n\napp = lumen.App(\"counter_app\", title=\"Counter\")\nstate = Counter(app)\n\n@app.on_click(\"bump\")              # decorator; handler takes no args\ndef bump():\n    state.count += 1               # typed, autocompleted, syncs to the runtime\n    state.label = f\"{state.count} clicks\"\n\napp.run()                          # blocks until the window closes";
 
-// sdk/cpp/README.md
+// public/lumenui/cpp/README.md
 export const CPP_SDK = "#include <lumen.hpp>\n#include <string>\n\nint main() {\n    lumen::App app(\"counter_app\", {.title = \"Counter\"});\n\n    lumen::Signal<int64_t>     count{\"count\", 0};\n    lumen::Signal<std::string> label{\"label\", \"0 clicks\"};\n\n    app.on_click(\"bump\", [&] {\n        count += 1;                                       // typed operators\n        label = std::to_string(*count) + \" clicks\";       // *count reads\n    });\n\n    return app.run();   // blocks until the window closes\n}";

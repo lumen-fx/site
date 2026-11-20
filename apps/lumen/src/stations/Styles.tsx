@@ -7,7 +7,7 @@ export function Styles() {
     <Station
       index={2}
       title="Styled by a real cascade."
-      lede="Custom properties on :root, var() everywhere else, class and id selectors, hover, press, and focus states, flexbox and grid. It is CSS, and it behaves like CSS."
+      lede="Custom properties on :root, var() everywhere else, class and id selectors, hover, press, and focus states, flexbox and grid, transitions and @keyframes. It is CSS, and it behaves like CSS."
     >
       <CodeBlock code={STYLES_CSS} lang="css" label="main.css" />
       <ul className="notes">
@@ -26,7 +26,7 @@ export function Styles() {
         <li>
           <span className="notes__key">layout</span>
           <span className="notes__body">
-            Flexbox and grid lay the tree out; text is shaped and hinted per glyph.
+            Flexbox and grid lay the tree out; text is shaped with font fallback and bidirectional runs.
           </span>
         </li>
       </ul>

@@ -14,7 +14,7 @@ export function Measured() {
     <Station
       index={6}
       title="Measured, not asserted."
-      lede="Frame time while scrolling ten thousand rows, and the same hello-world app built in eight frameworks and started the same way. Both come from the open benchmark suite."
+      lede="Frame time while scrolling ten thousand rows, and the same hello-world app built in nine frameworks and started the same way. Both come from the open benchmark suite, measured on Lumen 0.0.12 as the installer ships it."
       wide
     >
       <div className="measured">
@@ -41,6 +41,9 @@ export function Measured() {
           <figcaption className="startup__cap">
             exec to first frame, hello world
             <span className="startup__unit">ms / idle MiB / binary MiB</span>
+            <span className="startup__unit startup__machine">
+              medians, Intel Core i9-12900K, nested headless weston, Arch Linux
+            </span>
           </figcaption>
           <table className="startup__table">
             <thead>
@@ -68,8 +71,10 @@ export function Measured() {
         </figure>
       </div>
       <p className="station__aside">
-        Run them yourself: <a href={BENCH_URL}>lumen-benchmarks</a> builds every entry from
-        source and reports the same table.
+        Run them yourself: <a href={BENCH_URL}>guibench</a> builds every entry from source and
+        reports the same table. Lumen's binary is lumenc with the engine library, the standard
+        library, and the script host it loads; the toolkit rows leave their shared libraries out.
+        Lumen and iced start in times the suite cannot tell apart.
       </p>
     </Station>
   );
