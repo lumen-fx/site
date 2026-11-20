@@ -6,7 +6,7 @@ export function Reload() {
     <Station
       index={4}
       title="Save the file. Keep your place."
-      lede="Hot reload swaps markup, CSS, or script into the window that is already open. Focus, scroll position, and every signal value survive, so you carry on from where you were rather than from the first screen."
+      lede="Hot reload swaps markup, CSS, or script into the window that is already open. Typed text, scroll positions, and every signal value survive, so you carry on from where you were rather than from the first screen."
     >
       <ol className="swap">
         {RELOAD_READINGS.map((reading) => (
@@ -24,7 +24,8 @@ export function Reload() {
       </ol>
       <p className="station__aside">
         The window never restarts, so there is no cold start to sit through and no state to
-        set up again before the change you made is on screen.
+        set up again before the change you made is on screen. A save that does not compile
+        leaves the last working version running and names the file and line in a banner.
       </p>
     </Station>
   );

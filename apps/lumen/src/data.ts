@@ -16,14 +16,16 @@ export const DOCS_URL = "https://docs.lumenfx.dev/";
 export const RELEASES_URL = "https://github.com/lumen-fx/lumen/releases/latest";
 export const CANDELA_URL = "https://candela.lumenfx.dev/";
 export const LICENSE_URL = "https://github.com/lumen-fx/lumen/blob/main/LICENSE";
-export const BENCH_URL = "https://github.com/lumen-fx/lumen-benchmarks";
+export const BENCH_URL = "https://github.com/lumen-fx/guibench";
 
 // The documented one-line install for the prebuilt toolchain.
 export const INSTALL_CMD = "curl -fsSL https://lumenfx.dev/install.sh | sh";
 
-// The Windows installer, attached to every release.
+// The Windows installers, one per architecture, attached to every release.
 export const MSI_URL =
   "https://github.com/lumen-fx/lumen/releases/latest/download/lumen-windows-x86_64.msi";
+export const MSI_ARM_URL =
+  "https://github.com/lumen-fx/lumen/releases/latest/download/lumen-windows-aarch64.msi";
 
 // Every station in order. `id` is the anchor and the rail label. `nm` is the
 // station's band on the spectrum (the source is white light and has none), and
@@ -66,23 +68,23 @@ export interface Reading {
 export const RELOAD_READINGS: Reading[] = [
   {
     key: "markup",
-    value: "tree swaps",
-    body: "The widget tree is rebuilt and diffed against the live one. Ids keep their identity, so a button you were hovering stays the same button.",
+    value: "rebuilds",
+    body: "The tree is rebuilt from the new markup. An element with an id keeps its state: typed text and cursor, toggle and slider values, scroll position.",
   },
   {
     key: "css",
     value: "restyles",
-    body: "The cascade reruns against the tree already on screen. No relayout of anything the change did not touch.",
+    body: "The new sheet cascades against the live theme and window size, and every element with an id keeps its state the same way.",
   },
   {
     key: "script",
     value: "rebinds",
-    body: "Handlers are reregistered against the new source. Signal values survive, so the counter you were at is the counter you come back to.",
+    body: "The new source replaces the old one in place. Signal values and handlers carry over, so the counter you were at is the counter you come back to.",
   },
 ];
 
-// Script hosts. Lumen picks the host from the file extension, so an app and a
-// plugin can each use the language that fits them.
+// Script hosts. Lumen picks the host from the file extension. candela is the
+// supported language; rhai and lua still run existing scripts.
 export interface Host {
   name: string;
   ext: string;
@@ -94,25 +96,25 @@ export const HOSTS: Host[] = [
   {
     name: "candela",
     ext: ".cdl",
-    body: "Statically typed, compiled to bytecode, and shipped with the toolchain. The default for new apps.",
+    body: "Statically typed and shipped with the toolchain. Compiled from source with hot reload while you work, shipped as bytecode. Every template uses it.",
     href: CANDELA_URL,
   },
   {
     name: "lua",
     ext: ".lua",
-    body: "The language your users already know how to write plugins in.",
+    body: "Deprecated. Existing scripts still run; new apps use candela.",
   },
   {
     name: "rhai",
     ext: ".rhai",
-    body: "Rust-flavoured and sandboxed, for logic you want close to the host.",
+    body: "Deprecated. Existing scripts still run; new apps use candela.",
   },
 ];
 
 // Drive Lumen from a host language instead of scripting it: own the state and
-// the event handlers. Each SDK sits on the same C ABI, and each sample is the
-// quick start from that SDK's own source, fetched at build time. See
-// scripts/fetch_examples.py.
+// the event handlers. The Python and C++ SDKs sit on the C ABI; the Rust SDK
+// links the engine directly. Each sample is the quick start from that SDK's
+// own source, fetched at build time. See scripts/fetch_examples.py.
 export interface Sdk {
   name: string;
   install: string;
@@ -124,15 +126,15 @@ export interface Sdk {
 export const SDKS: Sdk[] = [
   {
     name: "Rust",
-    install: "cargo add lumen",
-    blurb: "The builder surface: markup, properties, and click handlers in one chain.",
+    install: "lumenc new my-app rust",
+    blurb: "The build script compiles the UI in src/ into the executable. Signals and handlers chain off the app, with bevy_ecs systems where they fit.",
     lang: "script",
     code: RUST_SDK,
   },
   {
     name: "Python",
     install: "pip install lumenui",
-    blurb: "Declare a model and every field becomes a signal. Imported as lumen.",
+    blurb: "Declare a model and every field becomes a signal. Imported as lumen; it loads the runtime the toolchain installs.",
     lang: "script",
     code: PYTHON_SDK,
   },
@@ -145,11 +147,15 @@ export const SDKS: Sdk[] = [
   },
 ];
 
-// The same app built in eight frameworks and measured the same way; from the
-// lumen-benchmarks suite (hello: startup floor + idle memory + binary), sorted
-// by startup. Startup is exec to first frame. Memory is idle PSS in MiB. Binary
-// is the stripped on-disk size; the toolkit frameworks link tens of MiB of
-// shared libraries not counted here.
+// The same app built in nine frameworks and measured the same way, from the
+// guibench suite (hello: startup floor + idle memory + binary), sorted by
+// startup. Medians from one run of the suite's defaults (20 launches for
+// startup, 3 for memory) under a nested headless weston on an Intel Core
+// i9-12900K under Arch Linux, with Lumen 0.0.12 from its release installer.
+// Startup is exec to first frame in ms. Memory is idle PSS in MiB. Binary is
+// the stripped on-disk size in MiB; for Lumen it is lumenc plus the engine
+// library, the standard library, and the script host the app loads. The
+// toolkit frameworks link tens of MiB of shared libraries not counted here.
 export interface BenchRow {
   framework: string;
   note?: string;
@@ -160,35 +166,43 @@ export interface BenchRow {
 }
 
 export const BENCH: BenchRow[] = [
-  { framework: "Slint", startup: "51", mem: "47", binary: "19.4" },
-  { framework: "Qt Widgets", note: "native", startup: "55", mem: "24", binary: "0.2 + toolkit" },
-  { framework: "GTK4", note: "native", startup: "55", mem: "38", binary: "0.0 + toolkit" },
-  { framework: "egui", startup: "59", mem: "48", binary: "18.8" },
-  { framework: "iced", startup: "92", mem: "58", binary: "14.3" },
-  { framework: "Lumen", note: "own renderer", startup: "104", mem: "63", binary: "22.4", self: true },
-  { framework: "Flutter", note: "own engine", startup: "127", mem: "78", binary: "5.1 + engine" },
-  { framework: "Tauri", note: "webview", startup: "164", mem: "59", binary: "5.3 + webkit" },
+  { framework: "Qt Widgets", note: "native", startup: "29", mem: "25", binary: "0.0 + toolkit" },
+  { framework: "GTK4", note: "native", startup: "60", mem: "45", binary: "0.0 + toolkit" },
+  { framework: "Slint", startup: "70", mem: "60", binary: "19.4" },
+  { framework: "egui", startup: "74", mem: "59", binary: "18.6" },
+  { framework: "Qt Quick", note: "own scene graph", startup: "76", mem: "90", binary: "0.0 + toolkit" },
+  { framework: "Lumen", note: "own renderer", startup: "86", mem: "105", binary: "97.8", self: true },
+  { framework: "iced", startup: "87", mem: "67", binary: "14.2" },
+  { framework: "Flutter", note: "own engine", startup: "121", mem: "94", binary: "5.1 + engine" },
+  { framework: "Tauri", note: "webview", startup: "150", mem: "87", binary: "5.3 + webkit" },
 ];
 
 // Lumen's frame time while scrolling a 10,000-row list at 1000 px/s: it holds a
-// single 60 Hz frame. Percentiles in ms, from the same suite.
-export const FRAME = { p50: "16.5", p95: "17.0", p99: "17.0" };
+// single 60 Hz frame. Percentiles in ms, the median of the suite's 3 passes, from
+// the same run.
+export const FRAME = { p50: "16.6", p95: "17.5", p99: "18.5" };
 export const FRAME_BUDGET = 16.67;
 
 // What runs today, and what is next. Kept apart on purpose.
 export const SHIPPING: string[] = [
-  "Linux, macOS, and Windows desktop",
+  "Linux, macOS, and Windows, on x86_64 and Arm64",
+  "GPU rendering, or a CPU renderer",
   "Hot reload of markup, CSS, and script",
-  "candela, lua, and rhai script hosts",
-  "C ABI with Rust, C++, and Python SDKs",
+  "candela scripts; rhai and lua deprecated",
+  "Rust, C++, and Python SDKs, and a C ABI",
+  "Transitions, keyframes, and springs",
+  "Docks, with panels popped out to windows",
+  "Commands, rebindable shortcuts, a palette",
+  "Popovers, menus, dialogs, and tooltips",
+  "Virtualized lists and grids",
+  "Another renderer's GPU frames in a surface",
   "Accessibility tree, IME, and Unicode BiDi",
-  "Virtualized lists and long content",
-  "lumenc web: the same source to a real DOM, in early access",
+  "In-window devtools on F12",
+  "Modules and packages declared in lumen.toml",
+  "lumenc web: real HTML and CSS, static or server-rendered",
 ];
 
 export const PLANNED: string[] = [
-  "Plugin dependencies declared in lumen.toml",
-  "Multi-window apps",
-  "Keyframe and spring animation",
-  "Built-in in-window devtools",
+  "Dragging dock panels between windows",
+  "iOS and Android",
 ];

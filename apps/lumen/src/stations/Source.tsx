@@ -1,6 +1,6 @@
 import { InstallLine } from "../components/InstallLine";
 import { LumenMark } from "../components/LumenMark";
-import { DOCS_URL, MSI_URL, REPO_URL } from "../data";
+import { DOCS_URL, MSI_ARM_URL, MSI_URL, REPO_URL } from "../data";
 
 // The source: white light, before the prism. What Lumen is, and how to get
 // it. Everything after this station is one band of the fan.
@@ -19,19 +19,24 @@ export function Source() {
         </p>
 
         <h1 className="source__title" id="source-title">
-          Desktop apps written as markup and CSS, painted by the GPU.
+          Desktop apps written as markup and CSS, painted by the GPU or the CPU.
         </h1>
         <p className="source__lede">
           Describe the window in .lmn markup. Style it with the cascade you already know. Wire
-          it in candela, lua, or rhai, or drive it from Rust, C++, or Python. Save the file and
-          the running window catches up without losing your place.
+          it in candela, or drive it from Rust, C++, or Python. Save the file and the running
+          window catches up without losing your place. The same app also builds to a static
+          site of real HTML and CSS.
         </p>
 
         <InstallLine />
         <p className="source__note">
-          macOS and Linux take the prebuilt toolchain. On Windows,{" "}
+          macOS and Linux take the prebuilt toolchain. On Windows, download the installer for{" "}
           <a href={MSI_URL} download>
-            download the installer
+            x86_64
+          </a>{" "}
+          or{" "}
+          <a href={MSI_ARM_URL} download>
+            Arm64
           </a>
           . It is not signed yet, so Windows warns before it runs.
         </p>
